@@ -192,7 +192,6 @@ lib/memcached/exceptions.rb
 lib/memcached/experimental.rb
 lib/memcached/marshal_codec.rb
 lib/memcached/memcached.rb
-lib/memcached/rails.rb
 memcached.gemspec
 memcached.pem
 test/profile/benchmark.rb
@@ -206,4 +205,3 @@ test/test_helper.rb
 test/unit/binding_test.rb
 test/unit/memcached_experimental_test.rb
 test/unit/memcached_test.rb
-test/unit/rails_test.rb

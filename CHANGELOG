@@ -1,3 +1,5 @@
+v1.8.2. Remove memcached/rails since it's unused. Fix cyclic dependency loading.
+
 v1.8.1. Disable ipv6 queries (shivnagarajan).
 
 v1.8.0. Add support for multi-entry CAS (fbogsany).

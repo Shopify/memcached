@@ -314,7 +314,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
   # Also accepts an <tt>encode</tt> value, which defaults to <tt>true</tt> and uses the default Marshal codec. Set <tt>encode</tt> to <tt>false</tt>, and pass a String as the <tt>value</tt>, if you want to set a raw byte array.
   #
   def set(key, value, ttl=@default_ttl, encode=true, flags=FLAGS)
-    value, flags = @codec.encode(key, value, flags) if encode
+    value, flags = do_encode(key, value, flags) if encode
     begin
       check_return_code(
         Lib.memcached_set(@struct, key, value, ttl, flags),
@@ -331,7 +331,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
 
   # Add a key/value pair. Raises <b>Memcached::NotStored</b> if the key already exists on the server. The parameters are the same as <tt>set</tt>.
   def add(key, value, ttl=@default_ttl, encode=true, flags=FLAGS)
-    value, flags = @codec.encode(key, value, flags) if encode
+    value, flags = do_encode(key, value, flags) if encode
     begin
       check_return_code(
         Lib.memcached_add(@struct, key, value, ttl, flags),
@@ -380,7 +380,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
 
   # Replace a key/value pair. Raises <b>Memcached::NotFound</b> if the key does not exist on the server. The parameters are the same as <tt>set</tt>.
   def replace(key, value, ttl=@default_ttl, encode=true, flags=FLAGS)
-    value, flags = @codec.encode(key, value, flags) if encode
+    value, flags = do_encode(key, value, flags) if encode
     begin
       check_return_code(
         Lib.memcached_replace(@struct, key, value, ttl, flags),
@@ -524,7 +524,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     raise ArgumentError, "get_from_last() is not useful unless :random distribution is enabled." unless options[:distribution] == :random
     value, flags, ret = Lib.memcached_get_from_last_rvalue(@struct, key)
     check_return_code(ret, key)
-    decode ? @codec.decode(key, value, flags) : value
+    decode ? do_decode(key, value, flags) : value
   end
 
   ### Information methods
@@ -581,6 +581,16 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
   ### Operations helpers
 
   private
+
+  # write instrumentation entrypoints
+  def do_encode(key, value, flags)
+    @codec.encode(key, value, flags)
+  end
+
+  # read instrumentation entrypoints
+  def do_decode(key, value, flags)
+    @codec.decode(key, value, flags)
+  end
 
   # Checks the return code from Rlibmemcached against the exception list. Raises the corresponding exception if the return code is not Memcached::Success or Memcached::ActionQueued. Accepts an integer return code and an optional key, for exception messages.
   def check_return_code(ret, key = nil) #:doc:
@@ -672,7 +682,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     value, flags, ret = Lib.memcached_get_rvalue(@struct, key)
     check_return_code(ret, key)
     cas = @struct.result.cas if @support_cas
-    value = @codec.decode(key, value, flags) if decode
+    value = do_decode(key, value, flags) if decode
     [value, flags, cas]
   end
 
@@ -694,7 +704,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     end
     if decode
       hash.each do |key, value_and_flags|
-        hash[key] = @codec.decode(key, *value_and_flags)
+        hash[key] = do_decode(key, *value_and_flags)
       end
     end
     [hash, flags_and_cas]
@@ -705,7 +715,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     hash.each do |key, value|
       raw_value = value
       flags, cas = flags_and_cas[key]
-      value, flags = @codec.encode(key, value, flags) if encode
+      value, flags = do_encode(key, value, flags) if encode
       begin
         ret = Lib.memcached_cas(@struct, key, value, ttl, flags, cas)
         if ret == 0 # Lib::MEMCACHED_SUCCESS
@@ -723,7 +733,7 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
   end
 
   def single_cas(key, value, ttl, flags, cas, encode)
-    value, flags = @codec.encode(key, value, flags) if encode
+    value, flags = do_encode(key, value, flags) if encode
     check_return_code(
       Lib.memcached_cas(@struct, key, value, ttl, flags, cas),
       key

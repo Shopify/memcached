@@ -16,7 +16,11 @@ A number of SWIG typemaps and C helper methods are also defined in <tt>ext/libme
 module Rlibmemcached
 end
 
+previous_verbose = $VERBOSE
 require 'rlibmemcached'
+# Loading the C-library set $VERBOSE = false and never resets it.
+# This is a cheap fix.
+$VERBOSE = previous_verbose
 
 class Memcached
   Lib = Rlibmemcached

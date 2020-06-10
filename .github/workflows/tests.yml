@@ -1,0 +1,23 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        ruby: [2.6, 2.7, head, debug]
+
+    runs-on: ${{ matrix.os }}-latest
+    continue-on-error: ${{ matrix.ruby == 'head' || matrix.ruby == 'debug' }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+    - name: Install libsasl2-dev
+      run: sudo apt-get install libsasl2-dev
+    - run: bundle install
+    - run: bundle exec rake

@@ -69,10 +69,6 @@ task :exceptions do
   end
 end
 
-task :benchmark do
- exec("ruby #{File.dirname(__FILE__)}/test/profile/benchmark.rb")
-end
-
 task :rb_profile do
  exec("ruby #{File.dirname(__FILE__)}/test/profile/rb_profiler.rb")
 end
@@ -122,10 +118,6 @@ end
 task :test_all => [:test_20, :test_19, :test_rbx]
 
 task :prerelease => [:manifest, :test_all, :install]
-
-task :benchmark_all do
-  with_vms("benchmark CLIENT=libm")
-end
 
 def run(cmd, reason)
   puts reason

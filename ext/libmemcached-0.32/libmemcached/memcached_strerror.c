@@ -84,6 +84,8 @@ const char *memcached_strerror(memcached_st *ptr __attribute__((unused)), memcac
     return "AUTHENTICATION FAILURE";
   case MEMCACHED_AUTH_CONTINUE:
     return "CONTINUE AUTHENTICATION";
+  case MEMCACHED_BAD_ITEM_PROVIDED:
+    return "ITEM SIZE EXCEEDS MAX_ITEM_SIZE";
   case MEMCACHED_MAXIMUM_RETURN:
     return "Gibberish returned!";
   default:

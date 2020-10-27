@@ -160,6 +160,9 @@ memcached_return memcached_behavior_set(memcached_st *ptr,
   case MEMCACHED_BEHAVIOR_AUTO_EJECT_HOSTS:
     set_behavior_flag(ptr, MEM_AUTO_EJECT_HOSTS, data);
     break;
+  case MEMCACHED_BEHAVIOR_MAX_ITEM_SIZE:
+    ptr->max_item_size= (uint32_t)data;
+    break;
   default:
     /* Shouldn't get here */
     WATCHPOINT_ASSERT(flag);
@@ -277,6 +280,8 @@ uint64_t memcached_behavior_get(memcached_st *ptr,
   case MEMCACHED_BEHAVIOR_AUTO_EJECT_HOSTS:
     temp_flag= MEM_AUTO_EJECT_HOSTS;
     break;
+  case MEMCACHED_BEHAVIOR_MAX_ITEM_SIZE:
+    return (uint64_t)ptr->max_item_size;
   default:
     WATCHPOINT_ASSERT(flag);
     break;

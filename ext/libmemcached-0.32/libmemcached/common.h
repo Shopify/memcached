@@ -186,4 +186,12 @@ static inline memcached_return memcached_validate_key_length(size_t key_length,
   return MEMCACHED_SUCCESS;
 }
 
+static inline memcached_return memcached_validate_value_length(memcached_st *ptr,
+                                                               size_t value_length) {
+  unlikely (value_length >= ptr->max_item_size)
+    return MEMCACHED_BAD_ITEM_PROVIDED;
+
+  return MEMCACHED_SUCCESS;
+}
+
 #endif /* LIBMEMCACHED_COMMON_H */

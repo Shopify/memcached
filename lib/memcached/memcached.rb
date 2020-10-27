@@ -34,6 +34,7 @@ class Memcached
     :use_udp => false,
     :binary_protocol => false,
     :credentials => nil,
+    :max_item_size => nil,
     :experimental_features => false,
     :codec => Memcached::MarshalCodec,
     :exception_retry_limit => 5,
@@ -100,6 +101,7 @@ Valid option parameters are:
 <tt>:sort_hosts</tt>:: Whether to force the server list to stay sorted. This defeats consistent hashing and is rarely useful.
 <tt>:verify_key</tt>:: Validate keys before accepting them. Never disable this.
 <tt>:poll_max_retries</tt>:: Maximum poll timeout retries before marking a flush failed on timeouts.
+<tt>:max_item_size</tt>:: Set this to validate that item size is under max for fast failure. By default, item size is not validated.
 
 Please note that when <tt>:no_block => true</tt>, update methods do not raise on errors. For example, if you try to <tt>set</tt> an invalid key, it will appear to succeed. The actual setting of the key occurs after libmemcached has returned control to your program, so there is no way to backtrack and raise the exception.
 

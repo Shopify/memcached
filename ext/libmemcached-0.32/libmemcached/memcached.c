@@ -93,6 +93,7 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *source)
   new_clone->hash= source->hash;
   new_clone->hash_continuum= source->hash_continuum;
   new_clone->user_data= source->user_data;
+  new_clone->max_item_size= source->max_item_size;
 
   new_clone->snd_timeout= source->snd_timeout;
   new_clone->rcv_timeout= source->rcv_timeout;

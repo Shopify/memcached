@@ -79,6 +79,13 @@ static inline memcached_return memcached_send(memcached_st *ptr,
   unlikely (rc != MEMCACHED_SUCCESS)
     return rc;
 
+  likely (ptr->max_item_size)
+  {
+    rc= memcached_validate_value_length(ptr, value_length);
+    unlikely (rc != MEMCACHED_SUCCESS)
+      return rc;
+  }
+
   unlikely (ptr->number_of_hosts == 0)
     return MEMCACHED_NO_SERVERS;
 

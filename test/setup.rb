@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # TODO: find a better way to share this with tests
 UNIX_SOCKET_NAME = File.join('/tmp', 'memcached')
 

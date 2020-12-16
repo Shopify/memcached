@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Memcached
   module Behaviors
     def set_behavior(behavior, value)
@@ -5,7 +6,7 @@ module Memcached
       value = convert_value(behavior, value)
       _set_behavior(behavior, value)
     rescue Memcached::Deprecated
-      warn "Behavior #{behavior_string} is deprecated, and won't work anymore."
+      warn("Behavior #{behavior_string} is deprecated, and won't work anymore.")
     end
 
     def get_behavior(behavior)
@@ -17,11 +18,12 @@ module Memcached
     end
 
     protected
+
     CONVERSION_FACTORS = {
       MEMCACHED_BEHAVIOR_RCV_TIMEOUT => 1_000_000,
       MEMCACHED_BEHAVIOR_SND_TIMEOUT => 1_000_000,
       MEMCACHED_BEHAVIOR_POLL_TIMEOUT => 1_000,
-      MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT => 1_000
+      MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT => 1_000,
     }
 
     VALUE_PREFIXES = {
@@ -52,7 +54,7 @@ module Memcached
     def lookup_constant(prefix, ct)
       raise ArgumentError unless prefix
       ct = ct.to_s.upcase
-      ct = prefix + ct unless ct.start_with? prefix
+      ct = prefix + ct unless ct.start_with?(prefix)
       Behaviors.const_get(ct)
     rescue NameError, ArgumentError
       raise ArgumentError, "Invalid constant #{ct.inspect}"

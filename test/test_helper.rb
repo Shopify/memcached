@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'memcached'
 
 require 'ostruct'
@@ -38,10 +39,10 @@ class BaseTest < Minitest::Test
   def binary_protocol_cache
     return @binary_protocol_cache if @binary_protocol_cache
     binary_protocol_options = {
-      :prefix_key => @prefix_key,
-      :hash => :default,
-      :distribution => :modula,
-      :binary_protocol => true
+      prefix_key: @prefix_key,
+      hash: :default,
+      distribution: :modula,
+      binary_protocol: true,
     }
     @binary_protocol_cache = Memcached::Client.new(@servers, binary_protocol_options)
   end
@@ -49,10 +50,10 @@ class BaseTest < Minitest::Test
   def udp_cache
     return @udp_cache if @udp_cache
     @udp_options = {
-      :prefix_key => @prefix_key,
-      :hash => :default,
-      :use_udp => true,
-      :distribution => :modula
+      prefix_key: @prefix_key,
+      hash: :default,
+      use_udp: true,
+      distribution: :modula,
     }
     @udp_cache = Memcached::Client.new(@udp_servers, @udp_options)
   end

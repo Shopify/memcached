@@ -1,8 +1,9 @@
+# frozen_string_literal: true
 module Memcached
   class Server
-    attr_reader :hostname
-    attr_reader :port
-    attr_reader :weight
+    attr_reader(:hostname)
+    attr_reader(:port)
+    attr_reader(:weight)
 
     def initialize(name, port, weight = nil)
       @hostname = name

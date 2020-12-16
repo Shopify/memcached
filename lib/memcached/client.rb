@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'memcached/behaviors'
 
 module Memcached
@@ -12,10 +13,10 @@ module Memcached
     require 'memcached/marshal_codec'
 
     DEFAULTS = {
-      :hash => :fnv1_32,
-      :distribution => :consistent_ketama,
-      :ketama_weighted => true,
-      :verify_key => true,
+      hash: :fnv1_32,
+      distribution: :consistent_ketama,
+      ketama_weighted: true,
+      verify_key: true,
     }
 
     attr_reader :config, :behaviors
@@ -64,10 +65,10 @@ module Memcached
       keys = keys.compact
       hash = connection.get_multi(keys)
       hash.each do |key, (value, flags)|
-        if raw != true
-          hash[key] = @codec.decode(key, value, flags)
+        hash[key] = if raw != true
+          @codec.decode(key, value, flags)
         else
-          hash[key] = value
+          value
         end
       end
       hash
@@ -146,9 +147,10 @@ module Memcached
     end
 
     private
+
     def create_config_str(servers)
       if servers.is_a?(String)
-        return servers if servers.include? '--'
+        return servers if servers.include?('--')
         servers = [servers]
       end
 
@@ -156,7 +158,7 @@ module Memcached
 
       servers.map do |server|
         server = server.to_s
-        hostname = server.gsub(/\/\?\d+$/, '')
+        hostname = server.gsub(%r{/\?\d+$}, '')
 
         if hostname =~ /^[\w\.-]+(:\d{1,5})?$/
           "--SERVER=#{server}"
@@ -191,6 +193,5 @@ module Memcached
       end
       options
     end
-
   end
 end

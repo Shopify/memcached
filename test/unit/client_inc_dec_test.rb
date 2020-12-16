@@ -1,20 +1,20 @@
+# frozen_string_literal: true
 require 'test_helper'
 
 class ClientIncDecTest < BaseTest
-
   def test_increment_simple
-    cache.set key, "10", raw: true
-    assert_equal 11, cache.increment(key)
+    cache.set(key, "10", raw: true)
+    assert_equal(11, cache.increment(key))
   end
 
   def test_increment_binary
-    binary_protocol_cache.set key, "10", raw: true
-    assert_equal 11, binary_protocol_cache.increment(key)
+    binary_protocol_cache.set(key, "10", raw: true)
+    assert_equal(11, binary_protocol_cache.increment(key))
   end
 
   def test_increment_offset
-    cache.set key, "10", raw: true
-    assert_equal 15, cache.increment(key, 5)
+    cache.set(key, "10", raw: true)
+    assert_equal(15, cache.increment(key, 5))
   end
 
   def test_missing_increment
@@ -22,23 +22,23 @@ class ClientIncDecTest < BaseTest
   end
 
   def test_decrement_simple
-    cache.set key, "10", raw: true
-    assert_equal 9, cache.decrement(key)
+    cache.set(key, "10", raw: true)
+    assert_equal(9, cache.decrement(key))
   end
 
   def test_decrement_binary
-    binary_protocol_cache.set key, "10", raw: true
-    assert_equal 9, binary_protocol_cache.decrement(key)
+    binary_protocol_cache.set(key, "10", raw: true)
+    assert_equal(9, binary_protocol_cache.decrement(key))
   end
 
   def test_decrement_offset
-    cache.set key, "10", raw: true
-    assert_equal 5, cache.decrement(key, 5)
+    cache.set(key, "10", raw: true)
+    assert_equal(5, cache.decrement(key, 5))
   end
 
   def test_decrement_with_negative
-    cache.set key, "10", raw: true
-    assert_equal 0, cache.decrement(key, 15)
+    cache.set(key, "10", raw: true)
+    assert_equal(0, cache.decrement(key, 15))
   end
 
   def test_missing_decrement

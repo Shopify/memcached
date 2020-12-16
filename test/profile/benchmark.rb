@@ -189,15 +189,6 @@ threadsafe: false),
     puts
   end
 
-  def benchmark_hashes(hashes, test_name)
-    hashes.each do |hash_name, int|
-      @m = Memcached::Rails.new(hash: hash_name)
-      @benchmark.report("#{test_name}:#{hash_name}") do
-        (@loops * 5).times { yield int }
-      end
-    end
-  end
-
   def run_without_recursion
     benchmark_clients("set") do |c|
       c.set(@k1, @m_value)
@@ -274,18 +265,6 @@ threadsafe: false),
       c.get(@k2)
       c.get(@k3)
     end
-
-    ## TODO: benchmark this in another file
-    #    if defined?(Memcached) && !ENV['TEST'] && !ENV['CLIENT']
-    #      benchmark_hashes(Memcached::HASH_VALUES, "hash") do |i|
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k1, i)
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k2, i)
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k3, i)
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k4, i)
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k5, i)
-    #        Rlibmemcached.memcached_generate_hash_rvalue(@k6, i)
-    #      end
-    #    end
   end
 end
 

@@ -498,7 +498,7 @@ class MemcachedTest # TODO
     # Provoke the errors in 'failures'
     exceptions = []
     100.times { begin; cache.set(key, @value); rescue => e; exceptions << e; end }
-    assert_equal(failures, exceptions.map { |x| x.class })
+    assert_equal(failures, exceptions.map(&:class))
 
     # Hit first server on retry
     assert_nothing_raised { cache.set(key, @value) }
@@ -507,7 +507,7 @@ class MemcachedTest # TODO
     sleep(2)
     exceptions = []
     100.times { begin; cache.set(key, @value); rescue => e; exceptions << e; end }
-    assert_equal(failures, exceptions.map { |x| x.class })
+    assert_equal(failures, exceptions.map(&:class))
   ensure
     socket.close
   end

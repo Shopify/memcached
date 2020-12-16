@@ -70,7 +70,7 @@ class ClientSetTest < BaseTest
       cache.set(key, "v")
     end
   ensure
-    socket.close if socket
+    socket&.close
   end
 
   def test_set_with_no_block_server_timeout
@@ -93,6 +93,6 @@ class ClientSetTest < BaseTest
       cache.set(key, "v")
     end
   ensure
-    socket.close if socket
+    socket&.close
   end
 end

@@ -25,8 +25,8 @@ class BaseTest < Minitest::Test
   end
 
   def teardown
-    @cache.flush if @cache
-    @binary_protocol_cache.flush if @binary_protocol_cache
+    @cache&.flush
+    @binary_protocol_cache&.flush
   end
 
   private

@@ -2,6 +2,8 @@ inherit_from:
   - https://shopify.github.io/ruby-style-guide/rubocop.yml
 
 AllCops:
+  Exclude:
+    - '**/extconf.rb'
   TargetRubyVersion: 2.6
 
 # Layout/RescueEnsureAlignment: { Enabled: false } # with extreme prejudice

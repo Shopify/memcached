@@ -13,13 +13,15 @@ SOLARIS_32 = RbConfig::CONFIG['target'] == "i386-pc-solaris2.10"
 BSD = RbConfig::CONFIG['host_os'].downcase =~ /bsd/
 
 $CFLAGS = "#{RbConfig::CONFIG['CFLAGS']} #{$CFLAGS}".gsub("$(cflags)", "").gsub("-fno-common", "").gsub(
-"-Wdeclaration-after-statement", "")
+  "-Wdeclaration-after-statement", ""
+)
 $CFLAGS << " -Os"
 $CFLAGS << " -std=gnu99" if SOLARIS_32
 $CFLAGS << " -I/usr/local/include" if BSD
 $EXTRA_CONF = " --disable-64bit" if SOLARIS_32
 $LDFLAGS = "#{RbConfig::CONFIG['LDFLAGS']} #{$LDFLAGS} -L#{RbConfig::CONFIG['libdir']}".gsub("$(ldflags)", "").gsub(
-"-fno-common", "")
+  "-fno-common", ""
+)
 $CXXFLAGS = "#{RbConfig::CONFIG['CXXFLAGS']} -fPIC"
 $CC = "CC=#{RbConfig::MAKEFILE_CONFIG['CC'].inspect}"
 
@@ -39,7 +41,7 @@ def compile_libmemcached
   return if ENV["EXTERNAL_LIB"]
 
   Dir.chdir(LIBMEMCACHED_DIR) do
-    Dir.mkdir("build") if !Dir.exist?("build")
+    Dir.mkdir("build") unless Dir.exist?("build")
     build_folder = File.join(LIBMEMCACHED_DIR, "build")
 
     ts_now = (Time.now - 1800).strftime("%Y%m%d%H%M.%S")

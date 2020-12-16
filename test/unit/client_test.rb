@@ -142,7 +142,7 @@ class ClientTest < BaseTest
         assert_equal("value#{index}", cache.get("test_thread_contention_#{index}"))
       end
     end
-    threads.each { |thread| thread.join }
+    threads.each(&:join)
   end
 
   def test_consistent_hashing

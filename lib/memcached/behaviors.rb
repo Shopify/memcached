@@ -14,7 +14,7 @@ module Memcached
     end
 
     def set_behaviors(hash)
-      hash.each { |key, value| set_behavior(key, value) } if hash
+      hash&.each { |key, value| set_behavior(key, value) }
     end
 
     protected

@@ -37,36 +37,40 @@ puts "Ruby #{RUBY_VERSION}p#{RUBY_PATCHLEVEL}"
 rescue LoadError
 end
 
-class Remix::Stash
-  # Remix::Stash API doesn't let you set servers
-  @@clusters = { default: Remix::Stash::Cluster.new(['127.0.0.1:43042', '127.0.0.1:43043']) }
+module Remix
+  class Stash
+    # Remix::Stash API doesn't let you set servers
+    @@clusters = { default: Remix::Stash::Cluster.new(['127.0.0.1:43042', '127.0.0.1:43043']) }
+  end
 end
 
-class Dalli::ClientCompat < Dalli::Client
-  def set(*args)
-    super(*args[0..2])
-  end
+module Dalli
+  class ClientCompat < Dalli::Client
+    def set(*args)
+      super(*args[0..2])
+    end
 
-  def get(*args)
-    super(args.first)
-  end
+    def get(*args)
+      super(args.first)
+    end
 
-  def get_multi(*args)
-    super(args.first)
-  end
+    def get_multi(*args)
+      super(args.first)
+    end
 
-  def append(*args)
-    super
-  rescue Dalli::DalliError
-  end
+    def append(*args)
+      super
+    rescue Dalli::DalliError
+    end
 
-  def prepend(*args)
-    super
-  rescue Dalli::DalliError
-  end
+    def prepend(*args)
+      super
+    rescue Dalli::DalliError
+    end
 
-  def exist?(key)
-    !get(key).nil?
+    def exist?(key)
+      !get(key).nil?
+    end
   end
 end
 

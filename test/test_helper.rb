@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'memcached'
 
+require 'socket'
 require 'ostruct'
 require 'securerandom'
 

@@ -22,7 +22,7 @@ task :exceptions do
   Memcached.constants.sort.each do |const_name|
     const = Memcached.send(:const_get, const_name)
     next if (const == Memcached::Success) || (const == Memcached::Stored)
-    if const.is_a?(Class)) && (const < Memcached::Error)
+    if const.is_a?(Class) && (const < Memcached::Error)
       puts "* Memcached::#{const_name}"
     end
   end

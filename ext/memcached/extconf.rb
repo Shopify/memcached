@@ -67,7 +67,7 @@ compile_libmemcached
 
 $libs = append_library($libs, "stdc++")
 
-unless have_library('memcached')) && have_header('libmemcached/memcached.h'))
+unless have_library('memcached') && have_header('libmemcached/memcached.h')
   abort "ERROR: Failed to build libmemcached"
 end
 

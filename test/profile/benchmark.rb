@@ -111,7 +111,6 @@ class Bench
   def reset_clients
     # Other clients
     @clients = {
-      "mclient:ascii" => MemCache.new(['127.0.0.1:43042', '127.0.0.1:43043']),
       "stash:bin" => Remix::Stash.new(:root),
       "dalli:bin" => Dalli::ClientCompat.new(['127.0.0.1:43042', '127.0.0.1:43043'], :marshal => false, :threadsafe => false)}
 

@@ -5,11 +5,11 @@ Gem::Specification.new do |s|
   s.name = "memcached"
   s.version = "2.0.0.alpha"
 
-  s.authors = ["Arthur Neves", "Evan Weaver"]
+  s.authors = ['Burke Libbey', "Arthur Neves", "Evan Weaver"]
   s.email = "arthurnn@gmail.com"
   s.description = "An interface to the libmemcached C client."
   s.summary = "An interface to the libmemcached C client."
-  s.homepage = "http://evan.github.com/evan/memcached/"
+  s.homepage = "http://github.com/shopify/memcached/"
 
   s.files         = %x(git ls-files -- {lib,ext,vendor}/*).split("\n") + %w(LICENSE README.md CHANGELOG)
   s.test_files    = %x(git ls-files -- {test}/*).split("\n")

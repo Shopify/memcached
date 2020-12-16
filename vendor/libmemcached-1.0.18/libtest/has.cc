@@ -41,6 +41,10 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+
 namespace libtest {
 
 bool has_libmemcached_sasl(void)

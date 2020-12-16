@@ -49,6 +49,10 @@ using namespace libtest;
 
 #include "tests/hash_results.h"
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
+
 static hashkit_st global_hashk;
 
 /**

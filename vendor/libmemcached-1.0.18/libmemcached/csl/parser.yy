@@ -1,4 +1,4 @@
-/*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
+/*  vim: expandtab:shiftwidth=2:tabstop=2:smarttab:
  *
  *  Libmemcached library
  *
@@ -42,17 +42,17 @@ class Context;
 
 %}
 
-%error-verbose
+%define parse.error verbose
 %debug
 %defines
 %expect 0
 %output "libmemcached/csl/parser.cc"
 %defines "libmemcached/csl/parser.h"
 %lex-param { yyscan_t *scanner }
-%name-prefix="config_"
+%define api.prefix {config_}
 %parse-param { class Context *context }
 %parse-param { yyscan_t *scanner }
-%pure-parser
+%define api.pure
 %require "2.5"
 %start begin
 %verbose
@@ -176,8 +176,10 @@ inline void __config_error(Context *context, yyscan_t *scanner, const char *erro
 %token <boolean> CSL_TRUE
 %token <boolean> CSL_FALSE
 
+/*
 %nonassoc ','
 %nonassoc '='
+*/
 
 %token <number> CSL_FLOAT
 %token <number> NUMBER
@@ -458,12 +460,14 @@ behavior_boolean:
 
 
 optional_port:
+          %empty
           { $$= MEMCACHED_DEFAULT_PORT;}
         | PORT
           { };
         ;
 
 optional_weight:
+          %empty
           { $$= 1; }
         | WEIGHT_START
           { }

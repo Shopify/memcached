@@ -37,6 +37,10 @@
 #include "libtest/yatlcon.h"
 #include <libtest/common.h>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Waddress"
+#endif
+
 namespace libtest {
 
 bool jenkins_is_caller(void)

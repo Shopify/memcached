@@ -47,6 +47,10 @@
 typedef void* yyscan_t;
 #endif
 
+#ifndef YY_TYPEDEF_YY_TOKENTYPE
+# define YY_TYPEDEF_YY_TOKENTYPE
+typedef int yytokentype;
+#endif
+
 #include <libmemcached/common.h>
 #include <libmemcached/csl/server.h>
-

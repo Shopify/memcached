@@ -58,6 +58,7 @@
 
 #ifndef __INTEL_COMPILER
 #pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 using namespace libtest;

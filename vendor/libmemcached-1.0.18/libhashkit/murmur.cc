@@ -56,6 +56,10 @@
 
 #ifdef HAVE_MURMUR_HASH
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 uint32_t hashkit_murmur(const char *key, size_t length, void *context)
 {
   /*

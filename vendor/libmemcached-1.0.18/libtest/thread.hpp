@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2019 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -52,7 +52,7 @@ public:
     _err= pthread_mutex_init(&_mutex, NULL);
   }
 
-  ~Mutex()
+  ~Mutex() noexcept(false)
   {
     if ((_err= pthread_mutex_destroy(&_mutex)))
     {
@@ -84,7 +84,7 @@ public:
     init();
   }
 
-  ~ScopedLock()
+  ~ScopedLock() noexcept(false)
   {
     int err;
     if ((err= pthread_mutex_unlock(_mutex.handle())))
@@ -124,7 +124,7 @@ public:
     }
   }
 
-  ~Condition()
+  ~Condition() noexcept(false)
   {
     int err;
     if ((err= pthread_cond_destroy(&_cond)))

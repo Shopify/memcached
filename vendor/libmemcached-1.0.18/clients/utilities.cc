@@ -28,9 +28,9 @@ long int timedif(struct timeval a, struct timeval b)
 {
   long us, s;
 
-  us = (int)(a.tv_usec - b.tv_usec);
+  us = static_cast<int>(a.tv_usec - b.tv_usec);
   us /= 1000;
-  s = (int)(a.tv_sec - b.tv_sec);
+  s = static_cast<int>(a.tv_sec - b.tv_sec);
   s *= 1000;
   return s + us;
 }

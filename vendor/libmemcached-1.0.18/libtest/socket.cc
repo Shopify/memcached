@@ -37,6 +37,11 @@
 #include "libtest/yatlcon.h"
 #include <libtest/common.h>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 static char global_socket[1024]= { 0 };
 
 namespace libtest {

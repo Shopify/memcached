@@ -27,7 +27,7 @@ AC_DEFUN([AX_SASL_OPTION],
          AC_ARG_ENABLE([sasl],
                        [AS_HELP_STRING([--disable-sasl], [Build with sasl support @<:@default=on@:>@])],
                        [ac_enable_sasl="$enableval"],
-                       [ac_enable_sasl=yes])
+                       [ac_enable_sasl=no])
 
          AS_IF([test "x${ac_enable_sasl}" = xyes],[
                AC_MSG_CHECKING([checking to see if enabling sasl])

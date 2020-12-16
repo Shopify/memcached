@@ -11,6 +11,10 @@
 
 #include "libhashkit/murmur3.h"
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 //-----------------------------------------------------------------------------
 // Platform-specific functions and macros
 

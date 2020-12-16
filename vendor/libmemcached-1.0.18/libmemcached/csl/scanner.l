@@ -61,6 +61,14 @@
 #endif
 #endif
 
+// We need yylex export demangled
+#define YY_DECL_IS_OURS 1
+extern "C" int config_lex \
+               (YYSTYPE * yylval_param , yyscan_t yyscanner);
+
+#define YY_DECL int config_lex \
+               (YYSTYPE * yylval_param , yyscan_t yyscanner)
+
 }
 
 

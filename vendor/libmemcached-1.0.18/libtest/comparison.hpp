@@ -48,6 +48,11 @@
 #include <libgearman-1.0/ostream.hpp>
 #endif
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+#pragma GCC diagnostic ignored "-Waddress"
+#endif
+
 namespace libtest {
 
 LIBTEST_API

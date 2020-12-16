@@ -42,6 +42,10 @@
 #include <ctime>
 #include <sys/types.h>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 bool memcached_is_consistent_distribution(const Memcached* memc)
 {
   switch (memc->distribution)

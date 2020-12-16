@@ -10,14 +10,16 @@
 
 m4_include([version.m4])
 
-AC_PREREQ([2.61])
-AC_INIT([libmemcached],VERSION_NUMBER,[http://libmemcached.org/])
+AC_PREREQ([2.69])
+AC_INIT([libmemcached],[VERSION_NUMBER],[http://libmemcached.org/])
+
+# Must come before AM_INIT_AUTOMAKE.
+AC_CONFIG_AUX_DIR([build-aux])
 
 # Setup the compilers early on
 AC_PROG_CC([cc gcc clang])
 AC_PROG_CXX([c++ g++ clang++])
 
-AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
@@ -335,7 +337,7 @@ AX_HARDEN_COMPILER_FLAGS
 AX_AM_JOBSERVER([yes])
 
 AC_CONFIG_FILES([Makefile
-                 docs/conf.py
+                 docs/source/conf.py
                  libmemcached-1.0/configure.h
                  support/libmemcached.pc
                  support/libmemcached.spec

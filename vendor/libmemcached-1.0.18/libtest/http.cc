@@ -44,6 +44,10 @@
 class CURL;
 #endif
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 
 static void cleanup_curl(void)
 {

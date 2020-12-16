@@ -50,6 +50,10 @@
 
 #include <libhashkit/common.h>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 #define hashsize(n) ((uint32_t)1<<(n))
 #define hashmask(n) (hashsize(n)-1)
 #define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))

@@ -94,6 +94,10 @@ using namespace libtest;
 
 #include "libmemcached/instance.hpp"
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
+
 static memcached_st * create_single_instance_memcached(const memcached_st *original_memc, const char *options)
 {
   /*

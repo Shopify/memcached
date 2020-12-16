@@ -11,11 +11,9 @@
 #
 #   Any compiler flag that "hardens" or tests code. C99 is assumed.
 #
-#   NOTE: Implementation based on AX_APPEND_FLAG.
-#
 # LICENSE
 #
-#  Copyright (C) 2012-2013 Brian Aker
+#  Copyright (C) 2012-2019 Brian Aker
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -53,7 +51,7 @@
 # -Wdeclaration-after-statement is counter to C99
 # _APPEND_COMPILE_FLAGS_ERROR([-pedantic])
 
-#serial 13
+#serial 17
 
 AC_DEFUN([_SET_SANITIZE_FLAGS],
          [AS_IF([test "x$MINGW" != xyes],[
@@ -106,12 +104,12 @@ AC_DEFUN([_APPEND_COMPILE_FLAGS_ERROR],
 # Everything above this does the heavy lifting, while what follows does the specifics.
 
 AC_DEFUN([_HARDEN_LINKER_FLAGS],
-        [AS_IF([test "$CC" != "clang"],
+        [AS_IF([test "$ax_cv_c_compiler_vendor" != "clang"],
           [_APPEND_LINK_FLAGS_ERROR([-z relro -z now])
-          AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],[AX_APPEND_LINK_FLAGS([-Werror])])
           AS_IF([test "x$ac_cv_vcs_checkout" = xyes],
           [_APPEND_LINK_FLAGS_ERROR([-rdynamic])
 #         AX_APPEND_LINK_FLAGS([--coverage])])
+          AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],[AX_APPEND_LINK_FLAGS([-Werror])])
           ])
         ])
 
@@ -134,11 +132,10 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
          [AC_LANG_PUSH([C])dnl
 
          AS_IF([test "x$ax_enable_debug" = xyes],
-           [CFLAGS=''
-           _APPEND_COMPILE_FLAGS_ERROR([-H])
+           [
+           #_APPEND_COMPILE_FLAGS_ERROR([-H])
            _APPEND_COMPILE_FLAGS_ERROR([-g])
            _APPEND_COMPILE_FLAGS_ERROR([-g3])
-           _APPEND_COMPILE_FLAGS_ERROR([-fmudflapth])
            _APPEND_COMPILE_FLAGS_ERROR([-fno-eliminate-unused-debug-types])
            _APPEND_COMPILE_FLAGS_ERROR([-fno-omit-frame-pointer])
            ],[
@@ -154,7 +151,7 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
            [_APPEND_COMPILE_FLAGS_ERROR([-Wno-unknown-pragmas])
            _APPEND_COMPILE_FLAGS_ERROR([-Wno-pragmas])])
 
-         AS_IF([test "$CC" = "clang"],[_APPEND_COMPILE_FLAGS_ERROR([-Qunused-arguments])])
+         AS_IF([test "$ax_cv_c_compiler_vendor" = "clang"],[_APPEND_COMPILE_FLAGS_ERROR([-Qunused-arguments])])
 
          _APPEND_COMPILE_FLAGS_ERROR([-Wall])
          _APPEND_COMPILE_FLAGS_ERROR([-Wextra])
@@ -162,8 +159,6 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
          _APPEND_COMPILE_FLAGS_ERROR([-Wthis-test-should-fail])
 # Anything below this comment please keep sorted.
 # _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-format-attribute])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wunsuffixed-float-constants])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wjump-misses-init])
           _APPEND_COMPILE_FLAGS_ERROR([-Wno-attributes])
           _APPEND_COMPILE_FLAGS_ERROR([-Waddress])
           _APPEND_COMPILE_FLAGS_ERROR([-Wvarargs])
@@ -176,16 +171,12 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
           _APPEND_COMPILE_FLAGS_ERROR([-Wformat-security])
           _APPEND_COMPILE_FLAGS_ERROR([-Wformat=2])
           _APPEND_COMPILE_FLAGS_ERROR([-Wformat-y2k])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wlogical-op])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wmaybe-uninitialized])
           _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-field-initializers])
           AS_IF([test "x$MINGW" = xyes],
                 [_APPEND_COMPILE_FLAGS_ERROR([-Wno-missing-noreturn])],
                 [_APPEND_COMPILE_FLAGS_ERROR([-Wmissing-noreturn])])
           _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-prototypes])
           _APPEND_COMPILE_FLAGS_ERROR([-Wnested-externs])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wnormalized=id])
-          _APPEND_COMPILE_FLAGS_ERROR([-Woverride-init])
           _APPEND_COMPILE_FLAGS_ERROR([-Wpointer-arith])
           _APPEND_COMPILE_FLAGS_ERROR([-Wpointer-sign])
           AS_IF([test "x$MINGW" = xyes],
@@ -200,12 +191,8 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
           _APPEND_COMPILE_FLAGS_ERROR([-Wstrict-overflow=1])
           _APPEND_COMPILE_FLAGS_ERROR([-Wstrict-prototypes])
           _APPEND_COMPILE_FLAGS_ERROR([-Wswitch-enum])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wtrampolines])
           _APPEND_COMPILE_FLAGS_ERROR([-Wundef])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wunsafe-loop-optimizations])
-          _APPEND_COMPILE_FLAGS_ERROR([-funsafe-loop-optimizations])
 
-          _APPEND_COMPILE_FLAGS_ERROR([-Wclobbered])
           _APPEND_COMPILE_FLAGS_ERROR([-Wunused])
           _APPEND_COMPILE_FLAGS_ERROR([-Wunused-result])
           _APPEND_COMPILE_FLAGS_ERROR([-Wunused-variable])
@@ -215,10 +202,15 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
           _APPEND_COMPILE_FLAGS_ERROR([-fwrapv])
           _APPEND_COMPILE_FLAGS_ERROR([-fmudflapt])
           _APPEND_COMPILE_FLAGS_ERROR([-pipe])
-          _APPEND_COMPILE_FLAGS_ERROR([-fPIE -pie])
+          AS_IF([test "x$MINGW" = xyes],
+                [],
+                [_APPEND_COMPILE_FLAGS_ERROR([-fPIE -pie])])
           _APPEND_COMPILE_FLAGS_ERROR([-Wsizeof-pointer-memaccess])
           _APPEND_COMPILE_FLAGS_ERROR([-Wpacked])
 #         _APPEND_COMPILE_FLAGS_ERROR([-Wlong-long])
+          _APPEND_COMPILE_FLAGS_ERROR([ftrapv])
+          # Stop error when using -pie on library builds
+          _APPEND_COMPILE_FLAGS_ERROR([-Wno-unused-command-line-argument])
 #         GCC 4.5 removed this.
 #         _APPEND_COMPILE_FLAGS_ERROR([-Wunreachable-code])
 
@@ -235,7 +227,7 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
                   ])])])])
 
          AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],
-             [AX_APPEND_FLAG([-Werror])])
+             [AX_APPEND_COMPILE_FLAGS([-Werror])])
 
           AC_LANG_POP([C])
   ])
@@ -244,10 +236,9 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
          [AC_LANG_PUSH([C++])
          AS_IF([test "x$ax_enable_debug" = xyes],
            [CXXFLAGS=''
-           _APPEND_COMPILE_FLAGS_ERROR([-H])
+           #_APPEND_COMPILE_FLAGS_ERROR([-H])
            _APPEND_COMPILE_FLAGS_ERROR([-g])
            _APPEND_COMPILE_FLAGS_ERROR([-g3])
-           _APPEND_COMPILE_FLAGS_ERROR([-fmudflapth])
            _APPEND_COMPILE_FLAGS_ERROR([-fno-inline])
            _APPEND_COMPILE_FLAGS_ERROR([-fno-eliminate-unused-debug-types])
            _APPEND_COMPILE_FLAGS_ERROR([-fno-omit-frame-pointer])
@@ -264,7 +255,7 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
            [_APPEND_COMPILE_FLAGS_ERROR([-Wno-unknown-pragmas])
            _APPEND_COMPILE_FLAGS_ERROR([-Wno-pragmas])])
 
-         AS_IF([test "$CXX" = "clang++"],[_APPEND_COMPILE_FLAGS_ERROR([-Qunused-arguments])])
+         AS_IF([test "$ax_cv_c_compiler_vendor" = "clang"],[_APPEND_COMPILE_FLAGS_ERROR([-Qunused-arguments])])
 
          _APPEND_COMPILE_FLAGS_ERROR([-Wall])
          _APPEND_COMPILE_FLAGS_ERROR([-Wextra])
@@ -307,8 +298,10 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
           _APPEND_COMPILE_FLAGS_ERROR([-Wunsafe-loop-optimizations])
           _APPEND_COMPILE_FLAGS_ERROR([-funsafe-loop-optimizations])
           _APPEND_COMPILE_FLAGS_ERROR([-Wc++11-compat])
-#         _APPEND_COMPILE_FLAGS_ERROR([-Weffc++])
-#         _APPEND_COMPILE_FLAGS_ERROR([-Wold-style-cast])
+# Disabled due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55837
+#          _APPEND_COMPILE_FLAGS_ERROR([-Weffc++])
+# Disable for Fedora 31
+#          _APPEND_COMPILE_FLAGS_ERROR([-Wold-style-cast])
           _APPEND_COMPILE_FLAGS_ERROR([-Wclobbered])
           _APPEND_COMPILE_FLAGS_ERROR([-Wunused])
           _APPEND_COMPILE_FLAGS_ERROR([-Wunused-result])
@@ -320,7 +313,9 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
           _APPEND_COMPILE_FLAGS_ERROR([-fwrapv])
           _APPEND_COMPILE_FLAGS_ERROR([-fmudflapt])
           _APPEND_COMPILE_FLAGS_ERROR([-pipe])
-          _APPEND_COMPILE_FLAGS_ERROR([-fPIE -pie])
+          AS_IF([test "x$MINGW" = xyes],
+                [],
+                [_APPEND_COMPILE_FLAGS_ERROR([-fPIE -pie])])
           _APPEND_COMPILE_FLAGS_ERROR([-Wsizeof-pointer-memaccess])
           _APPEND_COMPILE_FLAGS_ERROR([-Wpacked])
 #         _APPEND_COMPILE_FLAGS_ERROR([-Wlong-long])
@@ -340,7 +335,7 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
           _SET_SANITIZE_FLAGS
 
           AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],
-                [AX_APPEND_FLAG([-Werror])])
+                [AX_APPEND_COMPILE_FLAGS([-Werror])])
           AC_LANG_POP([C++])
   ])
 
@@ -350,6 +345,7 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
            [AC_PREREQ([2.63])dnl
            AC_REQUIRE([AC_CANONICAL_HOST])
            AC_REQUIRE([AX_COMPILER_VERSION])
+           AC_REQUIRE([AX_DEBUG])
            AC_REQUIRE([AX_ASSERT])
            _WARNINGS_AS_ERRORS
            _AX_HARDEN_SANITIZE
@@ -357,7 +353,6 @@ AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
            AC_REQUIRE([gl_VISIBILITY])
            AS_IF([test -n "$CFLAG_VISIBILITY"],[CPPFLAGS="$CPPFLAGS $CFLAG_VISIBILITY"])
 
-           _WARNINGS_AS_ERRORS
            _HARDEN_LINKER_FLAGS
            _HARDEN_CC_COMPILER_FLAGS
            _HARDEN_CXX_COMPILER_FLAGS

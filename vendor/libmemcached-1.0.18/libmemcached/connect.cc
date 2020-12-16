@@ -40,6 +40,11 @@
 
 #include <cassert>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+
 #ifndef SOCK_CLOEXEC 
 #  define SOCK_CLOEXEC 0
 #endif

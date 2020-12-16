@@ -43,6 +43,10 @@
 
 #include <vector>
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+#endif
+
 #ifdef linux
 /* /usr/include/netinet/in.h defines macros from ntohs() to _bswap_nn to
  * optimize the conversion functions, but the prototypes generate warnings
@@ -196,37 +200,55 @@ static memcached_socket_t connect_server(const char *hostname, const char *port)
   return sock;
 }
 
-static ssize_t timeout_io_op(memcached_socket_t fd, short direction, void *buf, size_t len)
+static ssize_t timeout_io_op_send(memcached_socket_t fd, const void *buf, size_t len)
 {
   ssize_t ret;
 
-  if (direction == POLLOUT)
-  {
-    ret= send(fd, buf, len, 0);
-  }
-  else
-  {
-    ret= recv(fd, buf, len, 0);
-  }
+  ret= send(fd, buf, len, 0);
 
   if (ret == SOCKET_ERROR && get_socket_errno() == EWOULDBLOCK) 
   {
     struct pollfd fds;
     memset(&fds, 0, sizeof(struct pollfd));
-    fds.events= direction;
+    fds.events= POLLOUT;
     fds.fd= fd;
 
     int err= poll(&fds, 1, timeout * 1000);
     if (err == 1)
     {
-      if (direction == POLLOUT)
-      {
-        ret= send(fd, buf, len, 0);
-      }
-      else
-      {
-        ret= recv(fd, buf, len, 0);
-      }
+      ret= send(fd, buf, len, 0);
+    }
+    else if (err == 0)
+    {
+      errno= ETIMEDOUT;
+    }
+    else
+    {
+      perror("Failed to poll");
+      return -1;
+    }
+  }
+
+  return ret;
+}
+
+static ssize_t timeout_io_op_recv(memcached_socket_t fd, void *buf, size_t len)
+{
+  ssize_t ret;
+
+  ret= recv(fd, buf, len, 0);
+
+  if (ret == SOCKET_ERROR && get_socket_errno() == EWOULDBLOCK) 
+  {
+    struct pollfd fds;
+    memset(&fds, 0, sizeof(struct pollfd));
+    fds.events= POLLIN;
+    fds.fd= fd;
+
+    int err= poll(&fds, 1, timeout * 1000);
+    if (err == 1)
+    {
+      ret= recv(fd, const_cast<void*>(buf), len, 0);
     }
     else if (err == 0)
     {
@@ -282,14 +304,14 @@ static enum test_return retry_write(const void* buf, size_t len)
   do
   {
     size_t num_bytes= len - offset;
-    ssize_t nw= timeout_io_op(sock, POLLOUT, (void*)(ptr + offset), num_bytes);
+    ssize_t nw= timeout_io_op_send(sock, ptr + offset, num_bytes);
     if (nw == -1)
     {
       verify(get_socket_errno() == EINTR || get_socket_errno() == EAGAIN);
     }
     else
     {
-      offset+= (size_t)nw;
+      offset+= static_cast<size_t>(nw);
     }
 
   } while (offset < len);
@@ -336,7 +358,7 @@ static enum test_return retry_read(void *buf, size_t len)
   size_t offset= 0;
   do
   {
-    ssize_t nr= timeout_io_op(sock, POLLIN, ((char*) buf) + offset, len - offset);
+    ssize_t nr= timeout_io_op_recv(sock, ((char*) buf) + offset, len - offset);
     switch (nr) {
     case -1 :
       fprintf(stderr, "Errno: %d %s\n", get_socket_errno(), strerror(errno));
@@ -662,7 +684,7 @@ static enum test_return test_binary_quit_impl(uint8_t cc)
   }
 
   /* Socket should be closed now, read should return EXIT_SUCCESS */
-  verify(timeout_io_op(sock, POLLIN, rsp.bytes, sizeof(rsp.bytes)) == 0);
+  verify(timeout_io_op_recv(sock, rsp.bytes, sizeof(rsp.bytes)) == 0);
 
   return TEST_PASS_RECONNECT;
 }
@@ -1271,7 +1293,7 @@ static enum test_return test_ascii_quit(void)
 
   /* Socket should be closed now, read should return EXIT_SUCCESS */
   char buffer[80];
-  verify(timeout_io_op(sock, POLLIN, buffer, sizeof(buffer)) == 0);
+  verify(timeout_io_op_recv(sock, buffer, sizeof(buffer)) == 0);
   return TEST_PASS_RECONNECT;
 
 }

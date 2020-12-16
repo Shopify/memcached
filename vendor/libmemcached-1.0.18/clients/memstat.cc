@@ -31,6 +31,10 @@
 #include "client_options.h"
 #include "utilities.h"
 
+#ifndef __INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
+
 #define PROGRAM_NAME "memstat"
 #define PROGRAM_DESCRIPTION "Output the state of a memcached cluster."
 

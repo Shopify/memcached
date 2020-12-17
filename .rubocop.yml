@@ -5,8 +5,3 @@ AllCops:
   Exclude:
     - '**/extconf.rb'
   TargetRubyVersion: 2.6
-
-# Layout/RescueEnsureAlignment: { Enabled: false } # with extreme prejudice
-# Style/FrozenStringLiteralComment: { Enabled: false }
-# Style/RegexpLiteral: { Enabled: false } # allow using %r{} for regexes
-# Lint/MissingSuper: { Enabled: false }

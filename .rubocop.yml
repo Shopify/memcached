@@ -1,7 +1,16 @@
 inherit_from:
   - https://shopify.github.io/ruby-style-guide/rubocop.yml
 
+require:
+  - rubocop-minitest
+  - rubocop-rake
+
 AllCops:
   Exclude:
     - '**/extconf.rb'
+    - 'tmp/**/*.rb'
   TargetRubyVersion: 2.6
+
+Naming/AccessorMethodName:
+  Exclude:
+    - 'lib/memcached/behaviors.rb' # don't want to change the API

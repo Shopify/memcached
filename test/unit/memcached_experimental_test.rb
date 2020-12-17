@@ -35,7 +35,7 @@ class MemcachedExperimentalTest # TODO
       hash: :default,
       distribution: :modula,
       experimental_features: true,
-      # binary_protocol does not work -- test_get, test_get, test_append, and test_missing_append will fail when it is set to true.
+      # binary_protocol does not work: test_{get,append,missing_append} will fail when true.
       binary_protocol: true,
     }
     @experimental_binary_protocol_cache = Memcached.new(@servers, @experimental_binary_protocol_options)

@@ -186,7 +186,7 @@ module Memcached
         raise ArgumentError, ":sort_hosts defeats :consistent hashing"
       end
 
-      if timeout = options.delete(:timeout)
+      if (timeout = options.delete(:timeout))
         options[:rcv_timeout] ||= timeout
         options[:snd_timeout] ||= timeout
         options[:poll_timeout] ||= timeout

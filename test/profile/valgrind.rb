@@ -1,10 +1,22 @@
-require "#{File.dirname(__FILE__)}/../setup"
+# frozen_string_literal: true
 
-COMMAND =  "--dsymutil=yes ruby -r#{File.dirname(__FILE__)}/exercise.rb -e \"Worker.new(ENV['TEST'] || 'everything', (ENV['LOOPS'] || 50).to_i, 'true').work\""
+require("#{File.dirname(__FILE__)}/../setup")
+
+def valgrind(args)
+  exec(
+    'valgrind',
+    *args,
+    '--dsymutil=yes', 'ruby', "-r#{File.dirname(__FILE__)}/exercise.rb",
+    '-e', "Worker.new(ENV['TEST'] || 'everything', (ENV['LOOPS'] || 50).to_i, 'true').work"
+  )
+end
 
 case ENV["TOOL"]
 when nil, "memcheck"
-  exec("valgrind --tool=memcheck --error-limit=no --undef-value-errors=no --leak-check=full --show-reachable=no --num-callers=15 --track-fds=yes --workaround-gcc296-bugs=yes --leak-resolution=med --max-stackframe=7304328 #{COMMAND}")
+  valgrind(%w(
+    --tool=memcheck --error-limit=no --undef-value-errors=no --leak-check=full --show-reachable=no --num-callers=15
+    --track-fds=yes --workaround-gcc296-bugs=yes --leak-resolution=med --max-stackframe=7304328
+  ))
 when "massif"
-  exec("valgrind --tool=massif --time-unit=B #{COMMAND}")
+  valgrind(%w(--tool=massif --time-unit=B))
 end

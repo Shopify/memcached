@@ -51,7 +51,7 @@ class ClientInitializeTest < BaseTest
   end
 
   def test_initialize_with_hostname_only
-    addresses = (1..8).map { |i| "app-cache-%02d" % i }
+    addresses = (1..8).map { |i| format('app-cache-%02d', i) }
     cache = Memcached::Client.new(addresses)
     addresses.each_with_index do |address, index|
       assert_equal(address, cache.connection.servers[index].hostname)

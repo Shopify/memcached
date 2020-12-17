@@ -111,10 +111,10 @@ class Worker
         @cache.prepend(@key2, @marshalled)
         @cache.get(@key1)
         @cache.get(@key3)
-        cache = Memcached::Rails.new(*@opts)
-        cache = @cache.clone
-        servers = @cache.servers
-        server = @cache.server_by_key(@key1)
+        _ = Memcached::Rails.new(*@opts)
+        _ = @cache.clone
+        _ = @cache.servers
+        _ = @cache.server_by_key(@key1)
         @cache.stats
       end
       @i.times do
@@ -146,7 +146,7 @@ class Worker
       end
     when "clone"
       @i.times do
-        cache = @cache.clone
+        _ = @cache.clone
       end
     when "reset"
       @i.times do
@@ -164,6 +164,7 @@ class Worker
       @i.times do
         @cache.set(@key1, "I'm big" * 1000000)
       rescue
+        nil
       end
     else
       raise "No such method"
@@ -192,6 +193,7 @@ class Worker
         require 'memory'
         Process.memory.each { |key, value| puts "#{key}: #{value / 1024.0}M" }
       rescue LoadError
+        nil
       end
     end
   end

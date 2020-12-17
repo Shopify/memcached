@@ -14,7 +14,11 @@ if ENV['PROFILE']
   require 'fileutils'
   FileUtils.mkdir_p('profiles')
 end
-begin; require 'memory'; rescue LoadError; end
+begin
+  require 'memory'
+rescue LoadError
+  nil
+end
 
 puts %x(uname -a)
 puts %x(ruby -v)
@@ -35,12 +39,15 @@ puts "Ruby #{RUBY_VERSION}p#{RUBY_PATCHLEVEL}"
                                nil
                                end}"
 rescue LoadError
+  nil
 end
 
 module Remix
   class Stash
     # Remix::Stash API doesn't let you set servers
+    # rubocop:disable Style/ClassVars
     @@clusters = { default: Remix::Stash::Cluster.new(['127.0.0.1:43042', '127.0.0.1:43043']) }
+    # rubocop:enable Style/ClassVars
   end
 end
 
@@ -61,11 +68,13 @@ module Dalli
     def append(*args)
       super
     rescue Dalli::DalliError
+      nil
     end
 
     def prepend(*args)
       super
     rescue Dalli::DalliError
+      nil
     end
 
     def exist?(key)
@@ -183,7 +192,7 @@ threadsafe: false),
           prof = RubyProf::MultiPrinter.new(RubyProf.stop)
           prof.print(path: 'profiles', profile: "#{test_name}-#{client_name.gsub(':', '-')}")
         end
-      rescue Exception => e
+      rescue StandardError => e
         # FIXME: stop swallowing errors
         puts "#{test_name}: #{client_name} => #{e.inspect}" if ENV["DEBUG"]
         reset_clients

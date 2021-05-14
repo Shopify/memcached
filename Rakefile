@@ -19,6 +19,10 @@ task default: %i(compile test)
 
 ENV["GEM_CERTIFICATE_CHAIN"]="memcached.pem"
 
+Rake::Task[:clean].enhance do
+  FileUtils.rm_rf(File.read(".gitignore").lines.flat_map { |l| Dir["**/#{l.chomp}"] })
+end
+
 task :swig do
   run("swig -DLIBMEMCACHED_WITH_SASL_SUPPORT -Iext/libmemcached-0.32 -ruby -autorename -o ext/rlibmemcached_wrap.c.in ext/rlibmemcached.i", "Running SWIG")
   swig_patches = {

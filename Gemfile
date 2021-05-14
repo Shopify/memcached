@@ -4,6 +4,7 @@ gemspec
 gem "rake"
 gem "rake-compiler"
 gem "test-unit"
+gem "stackprof"
 
 group :benchmark do
   gem "remix-stash", '~> 1.1.3'

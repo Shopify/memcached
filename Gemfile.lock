@@ -13,7 +13,7 @@ GEM
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
     concurrent-ruby (1.1.7)
-    dalli (2.6.4)
+    dalli (3.2.3)
     i18n (1.8.5)
       concurrent-ruby (~> 1.0)
     memcache-client (1.8.5)
@@ -36,7 +36,7 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport
-  dalli (~> 2.6.4)
+  dalli (~> 3.2.3)
   memcache-client (~> 1.8.5)
   memcached!
   mocha

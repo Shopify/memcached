@@ -916,9 +916,6 @@ SWIG_UnpackDataName(const char *c, void *ptr, size_t sz, const char *name) {
 #ifndef RARRAY_LEN
 # define RARRAY_LEN(x) RARRAY(x)->len
 #endif
-#ifndef RARRAY_PTR
-# define RARRAY_PTR(x) RARRAY(x)->ptr
-#endif
 #ifndef RFLOAT_VALUE
 # define RFLOAT_VALUE(x) RFLOAT(x)->value
 #endif
@@ -8908,7 +8905,9 @@ _wrap_memcached_mget(int argc, VALUE *argv, VALUE self) {
     arg3 = (size_t *) malloc((arg4+1)*sizeof(size_t));
     arg2 = (char **) malloc((arg4+1)*sizeof(char *));
     for(i = 0; i < arg4; i ++) {
-      str = rb_string_value(&RARRAY_PTR(argv[1])[i]);
+      str = rb_ary_entry(argv[1], i);
+      rb_string_value(&str);
+      rb_ary_store(argv[1], i, str);
       arg2[i] = RSTRING_PTR(str);
       arg3[i] = RSTRING_LEN(str);
     }
@@ -8959,7 +8958,9 @@ _wrap_memcached_mget_len(int argc, VALUE *argv, VALUE self) {
     arg3 = (size_t *) malloc((arg4+1)*sizeof(size_t));
     arg2 = (char **) malloc((arg4+1)*sizeof(char *));
     for(i = 0; i < arg4; i ++) {
-      str = rb_string_value(&RARRAY_PTR(argv[1])[i]);
+      str = rb_ary_entry(argv[1], i);
+      rb_string_value(&str);
+      rb_ary_store(argv[1], i, str);
       arg2[i] = RSTRING_PTR(str);
       arg3[i] = RSTRING_LEN(str);
     }
@@ -9104,7 +9105,9 @@ _wrap_memcached_mget_by_key(int argc, VALUE *argv, VALUE self) {
     arg5 = (size_t *) malloc((arg6+1)*sizeof(size_t));
     arg4 = (char **) malloc((arg6+1)*sizeof(char *));
     for(i = 0; i < arg6; i ++) {
-      str = rb_string_value(&RARRAY_PTR(argv[3])[i]);
+      str = rb_ary_entry(argv[1], i);
+      rb_string_value(&str);
+      rb_ary_store(argv[1], i, str);
       arg4[i] = RSTRING_PTR(str);
       arg5[i] = RSTRING_LEN(str);
     }

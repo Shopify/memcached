@@ -47,7 +47,9 @@
   $2 = (size_t *) malloc(($3+1)*sizeof(size_t));
   $1 = (char **) malloc(($3+1)*sizeof(char *));
   for(i = 0; i < $3; i ++) {
-    str = rb_string_value(&RARRAY_PTR($input)[i]);
+    str = rb_ary_entry($input, i);
+    rb_string_value(&str);
+    rb_ary_store($input, i, str);
     $1[i] = RSTRING_PTR(str);
     $2[i] = RSTRING_LEN(str);
   }

@@ -9105,9 +9105,9 @@ _wrap_memcached_mget_by_key(int argc, VALUE *argv, VALUE self) {
     arg5 = (size_t *) malloc((arg6+1)*sizeof(size_t));
     arg4 = (char **) malloc((arg6+1)*sizeof(char *));
     for(i = 0; i < arg6; i ++) {
-      str = rb_ary_entry(argv[1], i);
+      str = rb_ary_entry(argv[3], i);
       rb_string_value(&str);
-      rb_ary_store(argv[1], i, str);
+      rb_ary_store(argv[3], i, str);
       arg4[i] = RSTRING_PTR(str);
       arg5[i] = RSTRING_LEN(str);
     }

@@ -3,7 +3,7 @@ class Memcached
     # TOUCH is used to set a new expiration time for an existing item
     def touch(key, ttl=@default_ttl)
       check_return_code(
-        Lib.memcached_touch(@struct, key, ttl),
+        Lib.memcached_touch(memcached_struct, key, ttl),
         key
       )
     rescue => e

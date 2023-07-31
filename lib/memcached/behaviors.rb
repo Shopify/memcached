@@ -52,14 +52,14 @@ class Memcached
 
     lib_value = BEHAVIOR_VALUES[value] || (value * (CONVERSION_FACTORS[behavior] || 1)).to_i
     #STDERR.puts "Setting #{behavior}:#{b_id} => #{value} (#{lib_value})"
-    Lib.memcached_behavior_set(@struct, b_id, lib_value)
+    Lib.memcached_behavior_set(memcached_struct, b_id, lib_value)
     #STDERR.puts " -> set to #{get_behavior(behavior).inspect}"
   end
 
   # Get a behavior value for this Memcached instance. Accepts a Symbol.
   def get_behavior(behavior)
     raise ArgumentError, "No behavior #{behavior.inspect}" unless b_id = BEHAVIORS[behavior]
-    value = Lib.memcached_behavior_get(@struct, b_id)
+    value = Lib.memcached_behavior_get(memcached_struct, b_id)
 
     if BEHAVIOR_VALUES.invert.has_key?(value)
       # False, nil are valid values so we can not rely on direct lookups

@@ -39,8 +39,12 @@ memcached_st *memcached_create(memcached_st *ptr)
 
 void memcached_free(memcached_st *ptr)
 {
-  /* If we have anything open, lets close it now */
-  memcached_quit(ptr);
+  // memcached_quit(ptr);
+  // PATCH: The original code calls `memcached_quit`, which sends a QUIT command
+  // before closing the socket.
+  // This is problematic in forking environment as it may break inherited connections.
+  // Ideally we'd call `memcached_quit` if the connection was established in that same process.
+  memcached_discard(ptr);
   server_list_free(ptr, ptr->hosts);
   memcached_result_free(&ptr->result);
 

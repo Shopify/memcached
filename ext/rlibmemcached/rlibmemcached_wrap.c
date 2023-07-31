@@ -7520,6 +7520,27 @@ fail:
 
 
 SWIGINTERN VALUE
+_wrap_memcached_discard(int argc, VALUE *argv, VALUE self) {
+  memcached_st *arg1 = (memcached_st *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if ((argc < 1) || (argc > 1)) {
+    rb_raise(rb_eArgError, "wrong # of arguments(%d for 1)",argc); SWIG_fail;
+  }
+  res1 = SWIG_ConvertPtr(argv[0], &argp1,SWIGTYPE_p_memcached_st, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), Ruby_Format_TypeError( "", "memcached_st *","memcached_discard", 1, argv[0] )); 
+  }
+  arg1 = (memcached_st *)(argp1);
+  memcached_discard(arg1);
+  return Qnil;
+fail:
+  return Qnil;
+}
+
+
+SWIGINTERN VALUE
 _wrap_memcached_strerror(int argc, VALUE *argv, VALUE self) {
   memcached_st *arg1 = (memcached_st *) 0 ;
   memcached_return arg2 ;
@@ -13651,6 +13672,7 @@ SWIGEXPORT void Init_rlibmemcached(void) {
   rb_define_module_function(mRlibmemcached, "memcached_flush", _wrap_memcached_flush, -1);
   rb_define_module_function(mRlibmemcached, "memcached_verbosity", _wrap_memcached_verbosity, -1);
   rb_define_module_function(mRlibmemcached, "memcached_quit", _wrap_memcached_quit, -1);
+  rb_define_module_function(mRlibmemcached, "memcached_discard", _wrap_memcached_discard, -1);
   rb_define_module_function(mRlibmemcached, "memcached_strerror", _wrap_memcached_strerror, -1);
   rb_define_module_function(mRlibmemcached, "memcached_behavior_set", _wrap_memcached_behavior_set, -1);
   rb_define_module_function(mRlibmemcached, "memcached_behavior_get", _wrap_memcached_behavior_get, -1);

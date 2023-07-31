@@ -55,6 +55,7 @@ memcached_return memcached_io_readline(memcached_server_st *ptr,
                                        char *buffer_ptr,
                                        size_t size);
 memcached_return memcached_io_close(memcached_server_st *ptr);
+memcached_return memcached_io_discard(memcached_server_st *ptr);
 /* Read n bytes of data from the server and store them in dta */
 memcached_return memcached_safe_read(memcached_server_st *ptr,
                                      void *dta,

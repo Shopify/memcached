@@ -107,7 +107,8 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
 =end
 
   def initialize(servers = nil, opts = {})
-    @struct = Lib.memcached_create(nil)
+    @pid = Process.pid
+    @_memcached_struct = Lib.memcached_create(nil)
 
     # Merge option defaults and discard meaningless keys
     @options = DEFAULTS.merge(opts)
@@ -185,12 +186,12 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
       # Socket
       check_return_code(
         if server.is_a?(String) and File.socket?(server)
-          args = [@struct, server, options[:default_weight].to_i]
+          args = [memcached_struct, server, options[:default_weight].to_i]
           Lib.memcached_server_add_unix_socket_with_weight(*args)
         # Network
         elsif server.is_a?(String) and server =~ /^[\w\.-]+(:\d{1,5}){0,2}$/
           host, port, weight = server.split(":")
-          args = [@struct, host, port.to_i, (weight || options[:default_weight]).to_i]
+          args = [memcached_struct, host, port.to_i, (weight || options[:default_weight]).to_i]
           if options[:use_udp]
             Lib.memcached_server_add_udp_with_weight(*args)
           else
@@ -221,17 +222,17 @@ But it was #{server}.
         key += options[:prefix_delimiter]
         raise ArgumentError, "Max prefix key + prefix delimiter size is #{Lib::MEMCACHED_PREFIX_KEY_MAX_SIZE - 1}" unless
           key.size < Lib::MEMCACHED_PREFIX_KEY_MAX_SIZE
-        Lib.memcached_callback_set(@struct, Lib::MEMCACHED_CALLBACK_PREFIX_KEY, key)
+        Lib.memcached_callback_set(memcached_struct, Lib::MEMCACHED_CALLBACK_PREFIX_KEY, key)
       else
-        Lib.memcached_callback_set(@struct, Lib::MEMCACHED_CALLBACK_PREFIX_KEY, "")
+        Lib.memcached_callback_set(memcached_struct, Lib::MEMCACHED_CALLBACK_PREFIX_KEY, "")
       end
     )
   end
 
   # Return the current prefix key.
   def prefix_key
-    if @struct.prefix_key.size > 0
-      @struct.prefix_key[0..-1 - options[:prefix_delimiter].size]
+    if memcached_struct.prefix_key.size > 0
+      memcached_struct.prefix_key[0..-1 - options[:prefix_delimiter].size]
     else
       ""
     end
@@ -244,8 +245,8 @@ But it was #{server}.
   #
   def clone
     memcached = super
-    struct = Lib.memcached_clone(nil, @struct)
-    memcached.instance_variable_set('@struct', struct)
+    struct = Lib.memcached_clone(nil, memcached_struct)
+    memcached.instance_variable_set(:@_memcached_struct, struct)
     memcached
   end
 
@@ -258,7 +259,7 @@ But it was #{server}.
 
     # Create
     # FIXME Duplicates logic with initialize()
-    @struct = Lib.memcached_create(nil)
+    @_memcached_struct = Lib.memcached_create(nil)
     set_prefix_key(prev_prefix_key)
     set_behaviors
     set_credentials
@@ -267,7 +268,7 @@ But it was #{server}.
 
   # Disconnect from all currently connected servers
   def quit
-    Lib.memcached_quit(@struct)
+    Lib.memcached_quit(memcached_struct)
     self
   end
 
@@ -285,12 +286,23 @@ But it was #{server}.
 
   private
 
+  def memcached_struct
+    if @pid != Process.pid
+      old_struct = @_memcached_struct
+      @_memcached_struct = Lib.memcached_clone(nil, old_struct)
+      raise "memcached_clone returned nil" unless @_memcached_struct
+      Lib.memcached_discard(old_struct) # discard the connection without sending QUIT or FIN
+      @pid = Process.pid
+    end
+    @_memcached_struct or raise "No @_memcached_struct????"
+  end
+
   # Return an array of raw <tt>memcached_host_st</tt> structs for this instance.
   def server_structs
     array = []
-    if @struct.hosts
-      @struct.hosts.count.times do |i|
-        array << Lib.memcached_select_server_at(@struct, i)
+    if memcached_struct.hosts
+      memcached_struct.hosts.count.times do |i|
+        array << Lib.memcached_select_server_at(memcached_struct, i)
       end
     end
     array
@@ -312,7 +324,7 @@ But it was #{server}.
     value, flags = @codec.encode(key, value, flags) if encode
     begin
       check_return_code(
-        Lib.memcached_set(@struct, key, value, ttl, flags),
+        Lib.memcached_set(memcached_struct, key, value, ttl, flags),
         key
       )
     rescue => e
@@ -328,7 +340,7 @@ But it was #{server}.
     value, flags = @codec.encode(key, value, flags) if encode
     begin
       check_return_code(
-        Lib.memcached_add(@struct, key, value, ttl, flags),
+        Lib.memcached_add(memcached_struct, key, value, ttl, flags),
         key
       )
     rescue => e
@@ -345,7 +357,7 @@ But it was #{server}.
   #
   # Note that the key must be initialized to an unencoded integer first, via <tt>set</tt>, <tt>add</tt>, or <tt>replace</tt> with <tt>encode</tt> set to <tt>false</tt>.
   def increment(key, offset=1)
-    ret, value = Lib.memcached_increment(@struct, key, offset)
+    ret, value = Lib.memcached_increment(memcached_struct, key, offset)
     check_return_code(ret, key)
     value
   rescue => e
@@ -357,7 +369,7 @@ But it was #{server}.
 
   # Decrement a key's value. The parameters and exception behavior are the same as <tt>increment</tt>.
   def decrement(key, offset=1)
-    ret, value = Lib.memcached_decrement(@struct, key, offset)
+    ret, value = Lib.memcached_decrement(memcached_struct, key, offset)
     check_return_code(ret, key)
     value
   rescue => e
@@ -377,7 +389,7 @@ But it was #{server}.
     value, flags = @codec.encode(key, value, flags) if encode
     begin
       check_return_code(
-        Lib.memcached_replace(@struct, key, value, ttl, flags),
+        Lib.memcached_replace(memcached_struct, key, value, ttl, flags),
         key
       )
     rescue => e
@@ -394,7 +406,7 @@ But it was #{server}.
   def append(key, value)
     # Requires memcached 1.2.4
     check_return_code(
-      Lib.memcached_append(@struct, key, value.to_s, IGNORED, IGNORED),
+      Lib.memcached_append(memcached_struct, key, value.to_s, IGNORED, IGNORED),
       key
     )
   rescue => e
@@ -408,7 +420,7 @@ But it was #{server}.
   def prepend(key, value)
     # Requires memcached 1.2.4
     check_return_code(
-      Lib.memcached_prepend(@struct, key, value.to_s, IGNORED, IGNORED),
+      Lib.memcached_prepend(memcached_struct, key, value.to_s, IGNORED, IGNORED),
       key
     )
   rescue => e
@@ -457,7 +469,7 @@ But it was #{server}.
   # Deletes a key/value pair from the server. Accepts a String <tt>key</tt>. Raises <b>Memcached::NotFound</b> if the key does not exist.
   def delete(key)
     check_return_code(
-      Lib.memcached_delete(@struct, key, IGNORED),
+      Lib.memcached_delete(memcached_struct, key, IGNORED),
       key
     )
   rescue => e
@@ -470,7 +482,7 @@ But it was #{server}.
   # Flushes all key/value pairs from all the servers.
   def flush
     check_return_code(
-      Lib.memcached_flush(@struct, IGNORED)
+      Lib.memcached_flush(memcached_struct, IGNORED)
     )
   rescue => e
     tries ||= 0
@@ -508,7 +520,7 @@ But it was #{server}.
   # <tt>Memcached::NotFound</tt> if the key does not exist.
   def exist(key)
     check_return_code(
-      Lib.memcached_exist(@struct, key),
+      Lib.memcached_exist(memcached_struct, key),
       key
     )
   end
@@ -517,7 +529,7 @@ But it was #{server}.
   def get_from_last(key, decode=true)
     warn("Memcached#get_from_last is deprecated and was removed in newer versions of libmemcached")
     raise ArgumentError, "get_from_last() is not useful unless :random distribution is enabled." unless options[:distribution] == :random
-    value, flags, ret = Lib.memcached_get_from_last_rvalue(@struct, key)
+    value, flags, ret = Lib.memcached_get_from_last_rvalue(memcached_struct, key)
     check_return_code(ret, key)
     decode ? @codec.decode(key, value, flags) : value
   end
@@ -526,7 +538,7 @@ But it was #{server}.
 
   # Return the server used by a particular key.
   def server_by_key(key)
-    ret = Lib.memcached_server_by_key(@struct, key)
+    ret = Lib.memcached_server_by_key(memcached_struct, key)
     if ret.is_a?(Array)
       check_return_code(ret.last)
       inspect_server(ret.first)
@@ -540,18 +552,18 @@ But it was #{server}.
   def stats(subcommand = nil)
     stats = Hash.new([])
 
-    stat_struct, ret = Lib.memcached_stat(@struct, subcommand)
+    stat_struct, ret = Lib.memcached_stat(memcached_struct, subcommand)
     check_return_code(ret)
 
-    keys, ret = Lib.memcached_stat_get_keys(@struct, stat_struct)
+    keys, ret = Lib.memcached_stat_get_keys(memcached_struct, stat_struct)
     check_return_code(ret)
 
     keys.each do |key|
        server_structs.size.times do |index|
 
          value, ret = Lib.memcached_stat_get_value(
-           @struct,
-           Lib.memcached_select_stat_at(@struct, stat_struct, index),
+           memcached_struct,
+           Lib.memcached_select_stat_at(memcached_struct, stat_struct, index),
            key)
          check_return_code(ret, key)
 
@@ -565,7 +577,7 @@ But it was #{server}.
        end
     end
 
-    Lib.memcached_stat_free(@struct, stat_struct)
+    Lib.memcached_stat_free(memcached_struct, stat_struct)
     stats
   rescue Memcached::SomeErrorsWereReported => _
     e = _.class.new("Error getting stats")
@@ -597,16 +609,17 @@ But it was #{server}.
     message = "Key #{inspect_keys(key, (detect_failure if ret == Lib::MEMCACHED_SERVER_MARKED_DEAD)).inspect}" if key
     if key.is_a?(String)
       if ret == Lib::MEMCACHED_ERRNO
-        if (server = Lib.memcached_server_by_key(@struct, key)).is_a?(Array)
+        if (server = Lib.memcached_server_by_key(memcached_struct, key)).is_a?(Array)
           errno = server.first.cached_errno
           message = "Errno #{errno}: #{ERRNO_HASH[errno].inspect}. #{message}"
         end
       elsif ret == Lib::MEMCACHED_SERVER_ERROR
-        if (server = Lib.memcached_server_by_key(@struct, key)).is_a?(Array)
+        if (server = Lib.memcached_server_by_key(memcached_struct, key)).is_a?(Array)
           message = "\"#{server.first.cached_server_error}\". #{message}"
         end
       end
     end
+
     if EXCEPTIONS[ret]
       raise EXCEPTIONS[ret], message
     else
@@ -642,7 +655,7 @@ But it was #{server}.
 
   def destroy_credentials
     if options[:credentials] != nil
-      check_return_code(Lib.memcached_destroy_sasl_auth_data(@struct))
+      check_return_code(Lib.memcached_destroy_sasl_auth_data(memcached_struct))
     end
   end
 
@@ -650,7 +663,7 @@ But it was #{server}.
   def set_credentials
     if options[:credentials]
       check_return_code(
-        Lib.memcached_set_sasl_auth_data(@struct, *options[:credentials])
+        Lib.memcached_set_sasl_auth_data(memcached_struct, *options[:credentials])
       )
     end
   end
@@ -670,28 +683,28 @@ But it was #{server}.
   end
 
   def single_get(key, decode)
-    value, flags, ret = Lib.memcached_get_rvalue(@struct, key)
+    value, flags, ret = Lib.memcached_get_rvalue(memcached_struct, key)
     check_return_code(ret, key)
-    cas = @struct.result.cas if @support_cas
+    cas = memcached_struct.result.cas if @support_cas
     value = @codec.decode(key, value, flags) if decode
     [value, flags, cas]
   end
 
   def multi_get(keys, decode)
-    ret = Lib.memcached_mget(@struct, keys)
+    ret = Lib.memcached_mget(memcached_struct, keys)
     check_return_code(ret, keys)
 
     hash = {}
     flags_and_cas = {} if @support_cas
-    value, key, flags, ret = Lib.memcached_fetch_rvalue(@struct)
+    value, key, flags, ret = Lib.memcached_fetch_rvalue(memcached_struct)
     while ret != 21 do # Lib::MEMCACHED_END
       if ret == 0 # Lib::MEMCACHED_SUCCESS
-        flags_and_cas[key] = [flags, @struct.result.cas] if @support_cas
+        flags_and_cas[key] = [flags, memcached_struct.result.cas] if @support_cas
         hash[key] = decode ? [value, flags] : value
       elsif ret != 16 # Lib::MEMCACHED_NOTFOUND
         check_return_code(ret, key)
       end
-      value, key, flags, ret = Lib.memcached_fetch_rvalue(@struct)
+      value, key, flags, ret = Lib.memcached_fetch_rvalue(memcached_struct)
     end
     if decode
       hash.each do |inner_key, value_and_flags|
@@ -708,7 +721,7 @@ But it was #{server}.
       flags, cas = flags_and_cas[key]
       value, flags = @codec.encode(key, value, flags) if encode
       begin
-        ret = Lib.memcached_cas(@struct, key, value, ttl, flags, cas)
+        ret = Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas)
         if ret == 0 # Lib::MEMCACHED_SUCCESS
           result[key] = raw_value
         elsif ret != 12 && ret != 16 # Lib::MEMCACHED_DATA_EXISTS, Lib::MEMCACHED_NOTFOUND
@@ -726,7 +739,7 @@ But it was #{server}.
   def single_cas(key, value, ttl, flags, cas, encode)
     value, flags = @codec.encode(key, value, flags) if encode
     check_return_code(
-      Lib.memcached_cas(@struct, key, value, ttl, flags, cas),
+      Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas),
       key
     )
   end

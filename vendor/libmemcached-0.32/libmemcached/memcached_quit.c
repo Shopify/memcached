@@ -73,3 +73,42 @@ void memcached_quit(memcached_st *ptr)
       memcached_quit_server(&ptr->hosts[x], 0);
   }
 }
+
+// Past this point are custom extensions, not vanilla libmemcached
+void memcached_discard_server(memcached_server_st *ptr, uint8_t io_death)
+{
+  if (ptr->fd != -1)
+  {
+    memcached_io_discard(ptr);
+
+    ptr->fd= -1;
+    ptr->write_buffer_offset= (size_t) ((ptr->type == MEMCACHED_CONNECTION_UDP) ? UDP_DATAGRAM_HEADER_LENGTH : 0);
+    ptr->read_buffer_length= 0;
+    ptr->read_ptr= ptr->read_buffer;
+    memcached_server_response_reset(ptr);
+  }
+
+  if (io_death)
+  {
+    ptr->server_failure_counter++;
+  }
+  else
+  {
+    ptr->server_failure_counter = 0;
+  }
+}
+
+void memcached_discard(memcached_st *ptr)
+{
+  unsigned int x;
+
+  if (ptr->hosts == NULL || 
+      ptr->number_of_hosts == 0)
+    return;
+
+  if (ptr->hosts && ptr->number_of_hosts)
+  {
+    for (x= 0; x < ptr->number_of_hosts; x++)
+      memcached_discard_server(&ptr->hosts[x], 0);
+  }
+}

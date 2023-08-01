@@ -122,6 +122,7 @@ struct memcached_st {
   const sasl_callback_t *sasl_callbacks;
 #endif
   int last_server_key;
+  pid_t pid;
 };
 
 LIBMEMCACHED_API

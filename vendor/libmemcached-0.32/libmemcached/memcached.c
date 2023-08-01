@@ -33,18 +33,14 @@ memcached_st *memcached_create(memcached_st *ptr)
   /* TODO, Document why we picked these defaults */
   ptr->io_msg_watermark= 500;
   ptr->io_bytes_watermark= 65 * 1024;
+  ptr->pid = getpid();
 
   return ptr;
 }
 
 void memcached_free(memcached_st *ptr)
 {
-  // memcached_quit(ptr);
-  // PATCH: The original code calls `memcached_quit`, which sends a QUIT command
-  // before closing the socket.
-  // This is problematic in forking environment as it may break inherited connections.
-  // Ideally we'd call `memcached_quit` if the connection was established in that same process.
-  memcached_discard(ptr);
+  memcached_quit(ptr);
   server_list_free(ptr, ptr->hosts);
   memcached_result_free(&ptr->result);
 
@@ -86,6 +82,7 @@ memcached_st *memcached_clone(memcached_st *clone, memcached_st *source)
   if (new_clone == NULL)
     return NULL;
 
+  new_clone->pid= getpid();
   new_clone->flags= source->flags;
   new_clone->send_size= source->send_size;
   new_clone->recv_size= source->recv_size;

@@ -372,7 +372,7 @@ class MemcachedTest < Test::Unit::TestCase
     end).real
 
   ensure
-    socket.close
+    socket&.close
   end
 
   def test_get_with_prefix_key
@@ -403,7 +403,7 @@ class MemcachedTest < Test::Unit::TestCase
     @cache.set key, value
     result = @cache.get key, false
     non_wrapped_result = Rlibmemcached.memcached_get(
-      @cache.instance_variable_get("@struct"),
+      @cache.send(:memcached_struct),
       key
     ).first
     assert result.size > non_wrapped_result.size
@@ -1065,8 +1065,8 @@ class MemcachedTest < Test::Unit::TestCase
     assert_not_equal cache, @cache
 
     # Definitely check that the structs are unlinked
-    assert_not_equal @cache.instance_variable_get('@struct').object_id,
-      cache.instance_variable_get('@struct').object_id
+    assert_not_equal @cache.send(:memcached_struct).object_id,
+      cache.send(:memcached_struct).object_id
 
     assert_nothing_raised do
       @cache.set key, @value
@@ -1082,7 +1082,7 @@ class MemcachedTest < Test::Unit::TestCase
       cache.set key, @value
     end
     ret = Rlibmemcached.memcached_set(
-      cache.instance_variable_get("@struct"),
+      cache.send(:memcached_struct),
       key,
       @marshalled_value,
       0,
@@ -1096,7 +1096,7 @@ class MemcachedTest < Test::Unit::TestCase
       @noblock_cache.set key, @value
     end
     ret = Rlibmemcached.memcached_set(
-      @noblock_cache.instance_variable_get("@struct"),
+      @noblock_cache.send(:memcached_struct),
       key,
       @marshalled_value,
       0,
@@ -1328,7 +1328,7 @@ class MemcachedTest < Test::Unit::TestCase
 
     # This is an abuse of knowledge, but it's necessary to verify that
     # the library is handling the counter properly.
-    struct = cache.instance_variable_get(:@struct)
+    struct = cache.send(:memcached_struct)
     server = Rlibmemcached.memcached_server_by_key(struct, "marmotte").first
 
     # set to ensure connectivity
@@ -1474,12 +1474,12 @@ class MemcachedTest < Test::Unit::TestCase
   # Memory cleanup
 
   def test_reset
-    original_struct = @cache.instance_variable_get("@struct")
+    original_struct = @cache.send(:memcached_struct)
     assert_nothing_raised do
       @cache.reset
     end
     assert_not_equal original_struct,
-      @cache.instance_variable_get("@struct")
+      @cache.send(:memcached_struct)
   end
 
   # NOTE: This breaks encapsulation, but there's no other easy way to test this without
@@ -1496,6 +1496,91 @@ class MemcachedTest < Test::Unit::TestCase
 
   def test_interrupt_handling_no_block
     interrupt_test_with_options(key, @noblock_options)
+  end
+
+  if Process.respond_to?(:fork)
+    def _get_many(cache, key, count)
+      counts = Hash.new(0)
+
+      count.times do
+        counts[cache.get(key)] += 1
+      rescue Memcached::NotFound
+        counts[Memcached::NotFound] += 1
+      end
+
+      counts
+    end
+
+    def test_handle_fork
+      r, w = IO.pipe
+
+      pids = 5.times.map do |i|
+        key, value = "key-#{i}", "#{i}"
+        @cache.set(key, value)
+
+        Process.fork do
+          w.write(Marshal.dump({ key => _get_many(@cache, key, 10_000) }))
+          Process.exit!(0)
+        end
+      end
+
+      @cache.set("parent", "parent")
+      reads = { "parent" => _get_many(@cache, "parent", 100_000) }
+
+      5.times.each do
+        reads.merge!(Marshal.load(r))
+      end
+
+      pids.each do |pid|
+        _, status = Process.wait2(pid)
+        assert_predicate(status, :success?)
+      end
+
+      assert_equal(
+        {
+          "parent" => { "parent" => 100_000 },
+          "key-0" => { "0" => 10_000 },
+          "key-1" => { "1" => 10_000 },
+          "key-2" => { "2" => 10_000 },
+          "key-3" => { "3" => 10_000 },
+          "key-4" => { "4" => 10_000 },
+        },
+        reads,
+      )
+    end
+
+    def test_closing_in_child_doesnt_impact_parent
+      @cache.set("parent", "parent")
+
+      pid = Process.fork do
+        @cache.quit
+        Process.exit!(0)
+      end
+
+      _, status = Process.wait2(pid)
+      assert_predicate(status, :success?)
+
+      assert_equal "parent", @cache.get("parent")
+    end
+
+    def test_running_finalizer_in_child_doesnt_impact_parent
+      @cache.set("parent", "parent")
+
+      50.times do
+        assert_equal "parent", @cache.get("parent")
+        pid = Process.fork do
+          @cache = nil
+          # runs finalizers
+          GC.start
+          Process.exit(0)
+        end
+
+        assert_equal({ "parent" => 10000 }, _get_many(@cache, "parent", 10_000))
+
+        _, status = Process.wait2(pid)
+        assert_predicate(status, :success?)
+      end
+    end
   end
 
   private

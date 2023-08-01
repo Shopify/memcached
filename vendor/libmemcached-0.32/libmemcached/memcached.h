@@ -122,6 +122,7 @@ struct memcached_st {
   const sasl_callback_t *sasl_callbacks;
 #endif
   int last_server_key;
+  pid_t pid;
 };
 
 LIBMEMCACHED_API
@@ -181,6 +182,8 @@ LIBMEMCACHED_API
 memcached_return memcached_verbosity(memcached_st *ptr, unsigned int verbosity);
 LIBMEMCACHED_API
 void memcached_quit(memcached_st *ptr);
+LIBMEMCACHED_API
+void memcached_discard(memcached_st *ptr);
 LIBMEMCACHED_API
 const char *memcached_strerror(memcached_st *ptr, memcached_return rc);
 LIBMEMCACHED_API

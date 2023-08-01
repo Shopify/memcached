@@ -89,12 +89,12 @@ class MemcachedExperimentalTest < Test::Unit::TestCase
   # Memory cleanup
 
   def test_reset
-    original_struct = @cache.instance_variable_get("@struct")
+    original_struct = @cache.send(:memcached_struct)
     assert_nothing_raised do
       @cache.reset
     end
     assert_not_equal original_struct,
-      @cache.instance_variable_get("@struct")
+      @cache.send(:memcached_struct)
   end
 
   private

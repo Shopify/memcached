@@ -314,25 +314,10 @@ memcached_return memcached_io_discard(memcached_server_st *ptr)
 {
   int r;
 
-  if (ptr->fd == -1)
-    return MEMCACHED_SUCCESS;
-
-  int null_fd = open("/dev/null", O_RDWR | O_CLOEXEC);
-  if (null_fd < 0) {
-      return MEMCACHED_ERRNO;
+  if (ptr->fd >= 0) {
+    close(ptr->fd);
+    ptr->fd = -1;
   }
-
-  if (dup2(null_fd, ptr->fd) < 0) {
-      close(null_fd);
-      return MEMCACHED_ERRNO;
-  }
-
-  if (close(null_fd) < 0) {
-      return MEMCACHED_ERRNO;
-  }
-
-  ptr->fd = -1;
-
   return MEMCACHED_SUCCESS;
 }
 

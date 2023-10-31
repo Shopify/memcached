@@ -6,6 +6,13 @@ class NilClass
   end
 end
 
+# assert_equal calls obj.respond_to?, which isn't supported by NOT_FOUND < BasicObject
+class Memcached
+  def NOT_FOUND.respond_to?(*)
+    false
+  end
+end
+
 class MemcachedTest < Test::Unit::TestCase
   Rlibmemcached = Memcached.const_get(:Lib)
 
@@ -1496,6 +1503,49 @@ class MemcachedTest < Test::Unit::TestCase
 
   def test_interrupt_handling_no_block
     interrupt_test_with_options(key, @noblock_options)
+  end
+
+  # Test returning error values instead of raising
+
+  def test_without_exceptions_get
+    @cache.delete(key) rescue nil
+    @cache.without_exceptions do
+      assert_equal Memcached::NOT_FOUND, @cache.get(key)
+    end
+  end
+
+  def test_cas_without_exceptions
+    value2 = OpenStruct.new(:d => 3, :e => 4, :f => GenericClass)
+
+    @cas_cache.without_exceptions do
+      # Existing set
+      @cas_cache.set key, @value
+      @cas_cache.cas(key) do |current|
+        assert_equal @value, current
+        value2
+      end
+      assert_equal value2, @cas_cache.get(key)
+
+      # Existing test without marshalling
+      @cas_cache.set(key, "foo", 0, false)
+      @cas_cache.cas(key, 0, false) do |current|
+        "#{current}bar"
+      end
+      assert_equal "foobar", @cas_cache.get(key, false)
+
+      # Missing set
+      @cas_cache.delete key
+      assert_equal Memcached::NOT_FOUND, @cas_cache.cas(key) {}
+
+      # Conflicting set
+      @cas_cache.set key, @value
+      assert_raises(Memcached::ConnectionDataExists) do
+        @cas_cache.cas(key) do |current|
+          @cas_cache.set key, value2
+          current
+        end
+      end
+    end
   end
 
   if Process.respond_to?(:fork)

@@ -61,6 +61,11 @@ class Memcached
 
   attr_reader :options # Return the options Hash used to configure this instance.
 
+  NOT_FOUND = BasicObject.new
+  def NOT_FOUND.inspect
+    "<Memcached::NOT_FOUND>"
+  end
+
 ###### Configuration
 
 =begin rdoc
@@ -177,6 +182,8 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
 
     # Not found exceptions
     @show_backtraces = options[:show_backtraces] ? nil : EMPTY_ARRAY
+
+    @raise_on_errors = true
   end
 
   # Set the server list.
@@ -453,6 +460,9 @@ But it was #{server}.
     else
       # Single CAS
       value, flags, cas = single_get(keys, decode)
+      if !@raise_on_errors && value.equal?(NOT_FOUND)
+        return NOT_FOUND
+      end
       value = yield value
       single_cas(keys, value, ttl, flags, cas, decode)
     end
@@ -585,6 +595,15 @@ But it was #{server}.
     raise e
   end
 
+  # Causes get / cas operations to return NOT_FOUND instead of raising NotFound
+  def without_exceptions(&block)
+    prev = @raise_on_errors
+    @raise_on_errors = false
+    yield
+  ensure
+    @raise_on_errors = prev
+  end
+
   ### Operations helpers
 
   private
@@ -684,6 +703,9 @@ But it was #{server}.
 
   def single_get(key, decode)
     value, flags, ret = Lib.memcached_get_rvalue(memcached_struct, key)
+    if ret == 16 && !@raise_on_errors
+      return [NOT_FOUND, nil, nil]
+    end
     check_return_code(ret, key)
     cas = memcached_struct.result.cas if @support_cas
     value = @codec.decode(key, value, flags) if decode
@@ -738,9 +760,10 @@ But it was #{server}.
 
   def single_cas(key, value, ttl, flags, cas, encode)
     value, flags = @codec.encode(key, value, flags) if encode
-    check_return_code(
-      Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas),
-      key
-    )
+    ret = Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas)
+    if ret == 16 && !@raise_on_errors
+      return NOT_FOUND
+    end
+    check_return_code(ret, key)
   end
 end

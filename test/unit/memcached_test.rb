@@ -1250,6 +1250,8 @@ class MemcachedTest < Minitest::Test
     )
 
     key2 = 'test_missing_server'
+    cache.set(key2, @value)
+
     begin
       cache.get(key2)
     rescue => e

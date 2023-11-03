@@ -1504,7 +1504,7 @@ class MemcachedTest < Minitest::Test
 
   # Test returning error values instead of raising
 
-  def test_without_exceptions_get
+  def test_get_missing_without_exceptions
     @cache.delete(key) rescue nil
     @cache.without_exceptions do
       assert_equal Memcached::NOT_FOUND, @cache.get(key)
@@ -1536,12 +1536,25 @@ class MemcachedTest < Minitest::Test
 
       # Conflicting set
       @cas_cache.set key, @value
-      assert_raises(Memcached::ConnectionDataExists) do
-        @cas_cache.cas(key) do |current|
-          @cas_cache.set key, value2
-          current
-        end
-      end
+      assert_equal Memcached::DATA_EXISTS, (@cas_cache.cas(key) do |current|
+        @cas_cache.set key, value2
+        current
+      end)
+    end
+  end
+
+  def test_existing_add_without_exceptions
+    @cache.without_exceptions do
+      @cache.set key, @value
+      assert_equal Memcached::NOT_STORED, @cache.add(key, @value)
+    end
+  end
+
+  def test_missing_replace_without_exceptions
+    @cache.without_exceptions do
+      @cache.delete key rescue nil
+      assert_equal Memcached::NOT_STORED, @cache.replace(key, @value)
+      assert_equal Memcached::NOT_FOUND, @cache.get(key)
     end
   end
 

@@ -66,6 +66,16 @@ class Memcached
     "<Memcached::NOT_FOUND>"
   end
 
+  NOT_STORED = BasicObject.new
+  def NOT_STORED.inspect
+    "<Memcached::NOT_STORED>"
+  end
+
+  DATA_EXISTS = BasicObject.new
+  def DATA_EXISTS.inspect
+    "<Memcached::DATA_EXISTS>"
+  end
+
 ###### Configuration
 
 =begin rdoc
@@ -603,22 +613,31 @@ But it was #{server}.
   private
 
   # Checks the return code from Rlibmemcached against the exception list. Raises the corresponding exception if the return code is not Memcached::Success or Memcached::ActionQueued. Accepts an integer return code and an optional key, for exception messages.
-  # When @raise_on_errors is false, `NOT_FOUND` is returned instead of raising an exception when the key is not found.
+  # When @raise_on_errors is false the following are returned instead of raiing exceptions:
+  # `NOT_STORED` is returned when ret == 12 (Lib::MEMCACHED_DATA_EXISTS)
+  # `NOT_FOUND` is returned when ret == 16 (Lib::MEMCACHED_NOTFOUND)
+  # `DATA_EXISTS` is returned when ret == 14 (Lib::MEMCACHED_NOTSTORED)
   def check_return_code(ret, key = nil) #:doc:
     case ret
     when 0  # Lib::MEMCACHED_SUCCESS
     when 32 # Lib::MEMCACHED_BUFFERED
-    when 16
+    when 16 # Lib::MEMCACHED_NOTFOUND
       if @raise_on_errors
-        raise NotFound, "NOTFOUND".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTFOUND
+        raise NotFound, "NOTFOUND".freeze, @show_backtraces, cause: nil
       else
         NOT_FOUND
       end
-    when 14
+    when 14 # Lib::MEMCACHED_NOTSTORED
       if @raise_on_errors
-        raise NotStored, "NOTSTORED".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTSTORED
+        raise NotStored, "NOTSTORED".freeze, @show_backtraces, cause: nil
       else
-        NOT_FOUND
+        NOT_STORED
+      end
+    when 12 # Lib::MEMCACHED_DATA_EXISTS
+      if @raise_on_errors
+        reraise(key, ret)
+      else
+        DATA_EXISTS
       end
     else
       reraise(key, ret)

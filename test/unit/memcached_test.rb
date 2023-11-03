@@ -6,14 +6,7 @@ class NilClass
   end
 end
 
-# assert_equal calls obj.respond_to?, which isn't supported by NOT_FOUND < BasicObject
-class Memcached
-  def NOT_FOUND.respond_to?(*)
-    false
-  end
-end
-
-class MemcachedTest < Test::Unit::TestCase
+class MemcachedTest < Minitest::Test
   Rlibmemcached = Memcached.const_get(:Lib)
 
   def setup
@@ -29,6 +22,7 @@ class MemcachedTest < Test::Unit::TestCase
       :distribution => :modula,
       :show_backtraces => true}
     @cache = Memcached.new(@servers, @options)
+    @cache.flush
 
     @binary_protocol_options = {
       :prefix_key => @prefix_key,
@@ -295,7 +289,7 @@ class MemcachedTest < Test::Unit::TestCase
   def test_get_nil
     @cache.set key, nil, 0
     result = @cache.get key
-    assert_equal nil, result
+    assert_nil result
   end
 
   def test_get_from_last

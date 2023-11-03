@@ -365,8 +365,7 @@ But it was #{server}.
   # Note that the key must be initialized to an unencoded integer first, via <tt>set</tt>, <tt>add</tt>, or <tt>replace</tt> with <tt>encode</tt> set to <tt>false</tt>.
   def increment(key, offset=1)
     ret, value = Lib.memcached_increment(memcached_struct, key, offset)
-    check_return_code(ret, key)
-    value
+    check_return_code(ret, key) || value
   rescue => e
     tries ||= 0
     raise unless tries < options[:exception_retry_limit] && should_retry(e)
@@ -377,8 +376,7 @@ But it was #{server}.
   # Decrement a key's value. The parameters and exception behavior are the same as <tt>increment</tt>.
   def decrement(key, offset=1)
     ret, value = Lib.memcached_decrement(memcached_struct, key, offset)
-    check_return_code(ret, key)
-    value
+    check_return_code(ret, key) || value
   rescue => e
     tries ||= 0
     raise unless tries < options[:exception_retry_limit] && should_retry(e)
@@ -460,9 +458,7 @@ But it was #{server}.
     else
       # Single CAS
       value, flags, cas = single_get(keys, decode)
-      if !@raise_on_errors && value.equal?(NOT_FOUND)
-        return NOT_FOUND
-      end
+      return NOT_FOUND if NOT_FOUND == value
       value = yield value
       single_cas(keys, value, ttl, flags, cas, decode)
     end
@@ -540,8 +536,7 @@ But it was #{server}.
     warn("Memcached#get_from_last is deprecated and was removed in newer versions of libmemcached")
     raise ArgumentError, "get_from_last() is not useful unless :random distribution is enabled." unless options[:distribution] == :random
     value, flags, ret = Lib.memcached_get_from_last_rvalue(memcached_struct, key)
-    check_return_code(ret, key)
-    decode ? @codec.decode(key, value, flags) : value
+    check_return_code(ret, key) || (decode ? @codec.decode(key, value, flags) : value)
   end
 
   ### Information methods
@@ -550,8 +545,7 @@ But it was #{server}.
   def server_by_key(key)
     ret = Lib.memcached_server_by_key(memcached_struct, key)
     if ret.is_a?(Array)
-      check_return_code(ret.last)
-      inspect_server(ret.first)
+      check_return_code(ret.last) || inspect_server(ret.first)
     else
       check_return_code(ret)
     end
@@ -610,12 +604,21 @@ But it was #{server}.
 
   # Checks the return code from Rlibmemcached against the exception list. Raises the corresponding exception if the return code is not Memcached::Success or Memcached::ActionQueued. Accepts an integer return code and an optional key, for exception messages.
   def check_return_code(ret, key = nil) #:doc:
-    if ret == 0 # Lib::MEMCACHED_SUCCESS
-    elsif ret == 32 # Lib::MEMCACHED_BUFFERED
-    elsif ret == 16
-      raise NotFound, "NOTFOUND".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTFOUND
-    elsif ret == 14
-      raise NotStored, "NOTSTORED".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTSTORED
+    case ret
+    when 0  # Lib::MEMCACHED_SUCCESS
+    when 32 # Lib::MEMCACHED_BUFFERED
+    when 16
+      if @raise_on_errors
+        raise NotFound, "NOTFOUND".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTFOUND
+      else
+        NOT_FOUND
+      end
+    when 14
+      if @raise_on_errors
+        raise NotStored, "NOTSTORED".freeze, @show_backtraces, cause: nil # Lib::MEMCACHED_NOTSTORED
+      else
+        NOT_FOUND
+      end
     else
       reraise(key, ret)
     end
@@ -703,10 +706,10 @@ But it was #{server}.
 
   def single_get(key, decode)
     value, flags, ret = Lib.memcached_get_rvalue(memcached_struct, key)
-    if ret == 16 && !@raise_on_errors
-      return [NOT_FOUND, nil, nil]
-    end
-    check_return_code(ret, key)
+
+    result = check_return_code(ret, key)
+    return [NOT_FOUND, nil, nil] if result == NOT_FOUND
+
     cas = memcached_struct.result.cas if @support_cas
     value = @codec.decode(key, value, flags) if decode
     [value, flags, cas]
@@ -744,9 +747,12 @@ But it was #{server}.
       value, flags = @codec.encode(key, value, flags) if encode
       begin
         ret = Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas)
-        if ret == 0 # Lib::MEMCACHED_SUCCESS
+        case ret
+        when 0 # Lib::MEMCACHED_SUCCESS
           result[key] = raw_value
-        elsif ret != 12 && ret != 16 # Lib::MEMCACHED_DATA_EXISTS, Lib::MEMCACHED_NOTFOUND
+        when 12, 16 # Lib::MEMCACHED_DATA_EXISTS, Lib::MEMCACHED_NOTFOUND
+          # noop
+        else
           check_return_code(ret, key)
         end
       rescue => e
@@ -761,9 +767,6 @@ But it was #{server}.
   def single_cas(key, value, ttl, flags, cas, encode)
     value, flags = @codec.encode(key, value, flags) if encode
     ret = Lib.memcached_cas(memcached_struct, key, value, ttl, flags, cas)
-    if ret == 16 && !@raise_on_errors
-      return NOT_FOUND
-    end
     check_return_code(ret, key)
   end
 end

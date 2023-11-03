@@ -603,6 +603,7 @@ But it was #{server}.
   private
 
   # Checks the return code from Rlibmemcached against the exception list. Raises the corresponding exception if the return code is not Memcached::Success or Memcached::ActionQueued. Accepts an integer return code and an optional key, for exception messages.
+  # When @raise_on_errors is false, `NOT_FOUND` is returned instead of raising an exception when the key is not found.
   def check_return_code(ret, key = nil) #:doc:
     case ret
     when 0  # Lib::MEMCACHED_SUCCESS

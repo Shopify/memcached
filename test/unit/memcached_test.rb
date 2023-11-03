@@ -1315,7 +1315,7 @@ class MemcachedTest < Minitest::Test
       assert_match(/localhost:43041/, e.message)
     end
   ensure
-    socket.close
+    socket.close if socket
   end
 
   def test_wrong_failure_counter

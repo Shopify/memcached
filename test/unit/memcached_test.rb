@@ -1282,7 +1282,6 @@ class MemcachedTest < Minitest::Test
   end
 
   def test_unresponsive_server_retries_less_than_server_failure_limit
-    skip "This test is broken"
     socket = stub_server 43041
 
     cache = Memcached.new(
@@ -1298,6 +1297,10 @@ class MemcachedTest < Minitest::Test
 
     key2 = 'test_missing_server'
     assert_raise(Memcached::ATimeoutOccurred) { cache.set(key2, @value) }
+    2.times do
+      cache.set(key2, @value)
+    end
+
     begin
       cache.get(key2)
     rescue => e

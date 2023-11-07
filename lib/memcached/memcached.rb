@@ -613,7 +613,7 @@ But it was #{server}.
   private
 
   # Checks the return code from Rlibmemcached against the exception list. Raises the corresponding exception if the return code is not Memcached::Success or Memcached::ActionQueued. Accepts an integer return code and an optional key, for exception messages.
-  # When @raise_on_errors is false the following are returned instead of raiing exceptions:
+  # When @raise_on_errors is false the following are returned instead of raising exceptions:
   # `NOT_STORED` is returned when ret == 12 (Lib::MEMCACHED_DATA_EXISTS)
   # `NOT_FOUND` is returned when ret == 16 (Lib::MEMCACHED_NOTFOUND)
   # `DATA_EXISTS` is returned when ret == 14 (Lib::MEMCACHED_NOTSTORED)

@@ -185,8 +185,8 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     Array(servers).each_with_index do |server, index|
       # Socket
       check_return_code(
-        if server.is_a?(String) and File.socket?(server)
-          args = [memcached_struct, server, options[:default_weight].to_i]
+        if server.is_a?(String) and (server.start_with?("unix://") || File.socket?(server))
+          args = [memcached_struct, server.sub("unix://", ""), options[:default_weight].to_i]
           Lib.memcached_server_add_unix_socket_with_weight(*args)
         # Network
         elsif server.is_a?(String) and server =~ /^[\w\.-]+(:\d{1,5}){0,2}$/

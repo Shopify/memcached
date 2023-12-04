@@ -10,7 +10,7 @@ class MemcachedTest < Test::Unit::TestCase
   Rlibmemcached = Memcached.const_get(:Lib)
 
   def setup
-    @servers = ['localhost:43042', 'localhost:43043', "#{UNIX_SOCKET_NAME}0"]
+    @servers = ['localhost:43042', 'localhost:43043', "unix://#{UNIX_SOCKET_NAME}0"]
     @udp_servers = ['localhost:43052', 'localhost:43053']
 
     # Maximum allowed prefix key size for :hash_with_prefix_key_key => false
@@ -235,32 +235,34 @@ class MemcachedTest < Test::Unit::TestCase
       :sort_hosts => false,
       :distribution => :modula
     )
-    assert_equal @servers.sort,
-      cache.servers
+
+    # The unix:// prefix is stripped
+    expected_servers = @servers - ["unix://#{UNIX_SOCKET_NAME}0"]
+    expected_servers.sort!
+    expected_servers << "#{UNIX_SOCKET_NAME}0"
+
+    assert_equal expected_servers, cache.servers
 
     # Original with sort_hosts
     cache = Memcached.new(@servers.sort,
       :sort_hosts => true,
       :distribution => :modula
     )
-    assert_equal @servers.sort,
-      cache.servers
+    assert_equal expected_servers.sort, cache.servers
 
     # Reversed
     cache = Memcached.new(@servers.sort.reverse,
       :sort_hosts => false,
       :distribution => :modula
     )
-      assert_equal @servers.sort.reverse,
-    cache.servers
+    assert_equal expected_servers.reverse, cache.servers
 
     # Reversed with sort_hosts
     cache = Memcached.new(@servers.sort.reverse,
       :sort_hosts => true,
       :distribution => :modula
     )
-    assert_equal @servers.sort,
-      cache.servers
+    assert_equal expected_servers.sort, cache.servers
   end
 
   def test_initialize_single_server

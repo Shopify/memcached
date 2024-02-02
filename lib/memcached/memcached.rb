@@ -450,6 +450,8 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
       value = yield value
       single_cas(keys, value, ttl, flags, cas, decode)
     end
+  rescue ClientError => e
+    raise e
   rescue => e
     raise unless tries < options[:exception_retry_limit] && should_retry(e)
     tries += 1

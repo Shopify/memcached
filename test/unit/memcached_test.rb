@@ -779,6 +779,8 @@ class MemcachedTest < Test::Unit::TestCase
     end
   end
 
+  # CAS
+
   def test_cas
     value2 = OpenStruct.new(:d => 3, :e => 4, :f => GenericClass)
 
@@ -810,6 +812,12 @@ class MemcachedTest < Test::Unit::TestCase
         @cas_cache.set key, value2
         current
       end
+    end
+  end
+
+  def test_cas_raises_client_error_when_not_supported
+    assert_raises(Memcached::ClientError) do
+      @cache.cas(key) {}
     end
   end
 

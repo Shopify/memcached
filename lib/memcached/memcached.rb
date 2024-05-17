@@ -661,12 +661,14 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
 
   # Stringify an opaque server struct
   def inspect_server(server)
+    @servers ||= {}
+    return @servers[server] if @servers[server]
     strings = [server.hostname]
     if !is_unix_socket?(server)
       strings << ":#{server.port}"
       strings << ":#{server.weight}" if options[:ketama_weighted]
     end
-    strings.join
+    @servers[server] = strings.join
   end
 
   def single_get(key, decode)

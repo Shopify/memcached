@@ -434,28 +434,28 @@ Please note that when <tt>:no_block => true</tt>, update methods do not raise on
     tries ||= 0
     raise ClientError, "CAS not enabled for this Memcached instance" unless options[:support_cas]
 
-    if keys.is_a? Array
-      # Multi CAS
-      hash, flags_and_cas = multi_get(keys, decode)
-      unless hash.empty?
-        hash = yield hash
-        # Only CAS entries that were updated from the original hash
-        hash.delete_if {|k, _| !flags_and_cas.has_key?(k) }
-        hash = multi_cas(hash, ttl, flags_and_cas, decode, tries)
+    begin
+      if keys.is_a? Array
+        # Multi CAS
+        hash, flags_and_cas = multi_get(keys, decode)
+        unless hash.empty?
+          hash = yield hash
+          # Only CAS entries that were updated from the original hash
+          hash.delete_if {|k, _| !flags_and_cas.has_key?(k) }
+          hash = multi_cas(hash, ttl, flags_and_cas, decode, tries)
+        end
+        hash
+      else
+        # Single CAS
+        value, flags, cas = single_get(keys, decode)
+        value = yield value
+        single_cas(keys, value, ttl, flags, cas, decode)
       end
-      hash
-    else
-      # Single CAS
-      value, flags, cas = single_get(keys, decode)
-      value = yield value
-      single_cas(keys, value, ttl, flags, cas, decode)
+    rescue => e
+      raise unless tries < options[:exception_retry_limit] && should_retry(e)
+      tries += 1
+      retry
     end
-  rescue ClientError => e
-    raise e
-  rescue => e
-    raise unless tries < options[:exception_retry_limit] && should_retry(e)
-    tries += 1
-    retry
   end
 
   alias :compare_and_swap :cas

@@ -12889,13 +12889,11 @@ _wrap_memcached_fetch_rvalue(int argc, VALUE *argv, VALUE self) {
   int res5 = SWIG_TMPOBJ ;
   VALUE result;
   VALUE vresult = Qnil;
-  
-  {
-    const char *key_ptr;
-    size_t key_length_ptr;
-    arg2 = &key_ptr;
-    arg3 = &key_length_ptr;
-  }
+  const char *key_ptr;
+  size_t key_length_ptr;
+
+  arg2 = &key_ptr;
+  arg3 = &key_length_ptr;
   arg4 = &temp4;
   arg5 = &temp5;
   if ((argc < 1) || (argc > 1)) {

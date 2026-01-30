@@ -123,9 +123,9 @@ static inline memcached_return memcached_send(memcached_st *ptr,
 
     if (verb == DELETE_OP) {
       if (ptr->flags & MEM_NOREPLY)
-        write_length+= (size_t) snprintf(buffer_ptr, MEMCACHED_DEFAULT_COMMAND_SIZE, "noreply");
+        write_length+= (size_t) snprintf(buffer_ptr, MEMCACHED_DEFAULT_COMMAND_SIZE - write_length, "noreply");
     } else {
-      write_length+= (size_t) snprintf(buffer_ptr, MEMCACHED_DEFAULT_COMMAND_SIZE,
+      write_length+= (size_t) snprintf(buffer_ptr, MEMCACHED_DEFAULT_COMMAND_SIZE - write_length,
                                        "%u %llu %zu%s\r\n",
                                        flags,
                                        (unsigned long long)expiration, value_length,
